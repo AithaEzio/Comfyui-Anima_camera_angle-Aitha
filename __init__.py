@@ -1,16 +1,14 @@
-# 注册 Anima 相机控制节点（标签/额外提示词配置节点已合并为可选输入）
+"""English camera prompt controls for Anima, maintained by Aitha."""
+
 from .camera_angle_node import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
-from .camera_extra_config_node import NODE_CLASS_MAPPINGS as ECM, NODE_DISPLAY_NAME_MAPPINGS as EDN
+from .camera_extra_config_node import (
+    NODE_CLASS_MAPPINGS as EXTRA_CLASSES,
+    NODE_DISPLAY_NAME_MAPPINGS as EXTRA_NAMES,
+)
 
-NODE_CLASS_MAPPINGS.update(ECM)
+NODE_CLASS_MAPPINGS = {**NODE_CLASS_MAPPINGS, **EXTRA_CLASSES}
+NODE_DISPLAY_NAME_MAPPINGS = {**NODE_DISPLAY_NAME_MAPPINGS, **EXTRA_NAMES}
+WEB_DIRECTORY = "./js"
+__version__ = "1.0.1"
 
-NODE_DISPLAY_NAME_MAPPINGS.update(EDN)
-
-# 手动注册 JS 目录
-import os
-import nodes
-custom_node_dir = os.path.dirname(os.path.realpath(__file__))
-js_dir = os.path.join(custom_node_dir, "js")
-nodes.EXTENSION_WEB_DIRS["Comfyui-Anima_camera_angle"] = js_dir
-
-__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]

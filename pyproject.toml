@@ -1,0 +1,14 @@
+[project]
+name = "comfyui-anima-camera-angle-aitha"
+version = "1.0.1"
+description = "English Anima camera prompt controls with a 3D viewport and researched illustration presets."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Aitha" }]
+
+[project.urls]
+Repository = "https://github.com/AithaEzio/Comfyui-Anima_camera_angle-Aitha"
+Issues = "https://github.com/AithaEzio/Comfyui-Anima_camera_angle-Aitha/issues"
+Upstream = "https://github.com/xunying7860/Comfyui-Anima_camera_angle"
+CameraControlReference = "https://github.com/jtydhr88/ComfyUI-qwenmultiangle"

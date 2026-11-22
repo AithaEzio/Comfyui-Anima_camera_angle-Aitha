@@ -1,90 +1,148 @@
-# Comfyui-Anima_camera_angle
+# Comfyui-Anima_camera_angle-Aitha
 
-可视化相机角度控制节点，在 ComfyUI 节点内直接拖拽 3D 场景来控制相机位置和角度，输出结构化的相机提示词。适用于 anima、illustrious 等模型。
+English camera prompt controls for Anima, with an interactive 3D guide, Qwen-style preset dropdowns, and a larger illustration preset library. Forked from [xunying7860/Comfyui-Anima_camera_angle](https://github.com/xunying7860/Comfyui-Anima_camera_angle), with camera control inspiration from [ComfyUI-qwenmultiangle](https://github.com/jtydhr88/ComfyUI-qwenmultiangle).
 
-## 安装
+## Preview
+
+![Anima Camera Extra Prompts and Camera Angle nodes in ComfyUI](docs/images/comfyui-camera-nodes.png)
+
+Screenshot supplied by the maintainer from their ComfyUI session. It shows the connected nodes and live previews; it is not an image-generation benchmark.
+
+## What is included
+
+- English node names, inputs, tooltips, viewport controls, and documentation.
+- `horizontal_angle`, `vertical_angle`, and `zoom` controls, matching Qwen's naming and ranges.
+- Eight horizontal views, four elevation choices, and six framing choices. Dropdowns, numeric widgets, and 3D handles stay synchronized.
+- **107 extra presets**: 15 lens / perspective, 12 focus, 12 motion effects, 22 composition, 24 illustration styles, and 22 lighting choices. Four additional extreme viewpoints are available.
+- `None` to skip a group, `Custom` to enter your own text, and independent prompt weights. Inactive custom fields and weights are hidden.
+- Live prompt previews, copy controls, editable camera tags and weights, and execution previews for connected inputs.
+- Separate Aitha node IDs, so the upstream extension and this fork can be installed together.
+
+This package builds prompt text. The viewport is a spatial guide, not a preview of an Anima-generated image. It does not require the Qwen Multiple Angles LoRA or insert its `<sks>` token.
+
+## Installation
+
+1. Download the ZIP from this repository's **Code → Download ZIP**, or use the release ZIP.
+2. Extract the folder into `ComfyUI/custom_nodes/` and name it `Comfyui-Anima_camera_angle-Aitha`. The Python files must be directly inside that folder, not inside a second nested folder.
+3. Restart ComfyUI and refresh the browser. Search for **Anima Camera Angle - Aitha** or **Anima Camera Extra Prompts - Aitha**, under **Anima / Camera - Aitha**.
+
+Python 3.10 or newer is required. There are no additional Python packages, npm installation steps, build steps, model downloads, or remote API services required by these nodes. The Three.js runtime is bundled locally. Your generation workflow still needs its own Anima model and text encoder.
+
+### Install with Git
+
+Run this from your ComfyUI installation folder:
 
 ```bash
-cd ComfyUI/custom_nodes/
-git clone https://github.com/xunying7860/Comfyui-Anima_camera_angle.git
+cd custom_nodes
+git clone https://github.com/AithaEzio/Comfyui-Anima_camera_angle-Aitha.git
 ```
 
-重启 ComfyUI，在节点菜单中找到 `Anima/相机` → `Anima 相机控制`。
+Restart ComfyUI, then refresh the browser. To update an existing Git installation:
 
-## 节点说明
+```bash
+cd ComfyUI/custom_nodes/Comfyui-Anima_camera_angle-Aitha
+git pull --ff-only
+```
 
-<img width="2303" height="1507" alt="image" src="https://github.com/user-attachments/assets/14bda27c-5424-44f6-81d0-4eb0596d856c" />
+### Troubleshooting
+
+- **Nodes missing:** check that `__init__.py` sits directly inside the extension folder; restart the ComfyUI server and inspect its startup log.
+- **Old labels or stray socket:** restart the server, then hard-refresh the browser with Ctrl+F5. Unused internal sockets from older workflows are cleaned up when the graph loads.
+- **3D unavailable:** use the numeric controls and dropdowns; enable browser hardware acceleration / WebGL to use the scene.
+- **No prompt effect:** connect `camera_prompt` to your text chain before CLIP Text Encode; the viewport itself does not modify conditioning.
+- **Conflicting composition:** choose framing and extra composition presets that agree. For example, use Full body in the camera node with Full-body framing in Extra Prompts.
 
 
-### Anima 相机控制（主节点）
+After updating, restart ComfyUI and hard-refresh the browser to reload both the node definitions and frontend. Version 1.0.1 also removes unused internal tag-settings sockets from saved workflows, preserving the real `extra_config` connection.
 
-| 输入 | 说明 |
-|------|------|
-| `pos_x` | 方位角 (-1~1, 步长 0.05)。0=正面，0.5=右侧90°，±1=背面 |
-| `pos_y` | 高度 (-1~1, 步长 0.01)。>0.2=俯视，≥-0.2=平视，<-0.2=仰视 |
-| `pos_z` | 距离 (-1~1, 步长 0.05)。实际5档调节|
-| `roll` | 倾斜 (≥0, 步长 0.1)。>0 时输出 dutch angle |
-| `extra_config` | (*可选) 接入「Anima 相机额外提示词」节点的输出 |
-| `_tags_json` | 标签持久化（隐藏字段，自动保存） |
+## Quick start
 
-**输出：** `相机提示词` (STRING) — 格式如 `(from front:10), (medium shot:1)`
+Load [examples/anima_camera_aitha.json](examples/anima_camera_aitha.json) for a controls-only example with no other custom node dependencies.
 
-### Anima 相机额外提示词（配置节点）
+1. Adjust the camera with a dropdown, numeric widget, or colored 3D handle: pink for horizontal, cyan for vertical, gold for zoom. Scroll over the viewport to change zoom. Use **Reset camera** to return to front / eye level / medium framing.
+2. Optionally select presets in **Anima Camera Extra Prompts - Aitha** and connect its **extra_config** output to the camera node's **extra_config** input.
+3. Join the camera's **camera_prompt** output with your subject / scene prompt using your preferred STRING concatenation node. Feed that combined text into the `text` input of **CLIP Text Encode**. If necessary, convert the encoder's text widget to an input first.
 
-| 输入 | 说明 |
-|------|------|
-| `extreme_type` | 极限角度：无 / 极限俯视 / 极限仰视（互斥单选） |
-| `extreme_weight` | 极限角度权重 (0.1~50, 默认 10) |
-| `启用镜头/景深/运镜/构图/风格` | 传统额外提示词开关 + 文案 |
+Do not append **extra_prompt** a second time when **extra_config** is already connected: the camera prompt already includes those extras. The second output is for using the extra presets independently of the camera node.
 
-**输出：** `extra_config` (STRING JSON) — 接入主节点的 `extra_config` 可选输入。
+## Camera controls
 
-## 3D 场景交互
+| Input | Range / default | Meaning |
+| --- | --- | --- |
+| `horizontal_angle` | 0–360°, default 0° | 0 front, 90 right, 180 back, 270 left. 360 wraps to front. |
+| `vertical_angle` | −30–60°, default 0° | Negative looks up; positive looks down. Zero is eye level. |
+| `zoom` | 0–10, default 4 | Higher values select closer framing. |
+| `roll` | 0–1, default 0 | Any positive value enables the Dutch-angle tag; this is not a precise rotation angle. |
+| `extra_config` | Optional STRING connection | Presets from the Extra Prompts node. |
 
-- **拖拽**紫色圆环上的粉色点 → 调整方位角
-- **拖拽**青色弧上的青色点 → 调整高度
-- **拖拽**黄色点 → 调整相机位置
-- 右下角按钮：**归位**（复位视角）、**标签**（展开/收起标签面板）
+Horizontal presets: front, front-right quarter, right side, back-right quarter, back, back-left quarter, left side, and front-left quarter.
 
-## 标签面板
+Vertical presets: low-angle (−30°), eye-level (0°), elevated (30°), and high-angle (60°). Elevated and high-angle use the same `from above` tag with different emphasis.
 
-点击「标签」按钮展开，可编辑各视角的提示词文本：
+| Distance preset | Selected zoom | Active zoom interval | Default tag |
+| --- | --- | --- | --- |
+| Wide shot | 1 | 0 ≤ zoom < 2 | `wide shot` |
+| Full body | 2.5 | 2 ≤ zoom < 2.75 | `full body` |
+| Cowboy shot | 3 | 2.75 ≤ zoom < 3.5 | `cowboy shot` |
+| Medium shot | 4 | 3.5 ≤ zoom < 6 | `upper body` |
+| Close-up | 8 | 6 ≤ zoom < 9 | `close-up` |
+| Extreme close-up | 10 | 9 ≤ zoom ≤ 10 | `extreme close-up` |
 
-- **方位：** 正向/后方/左侧/右侧
-- **高度：** 俯视 / 平视 / 仰视
-- **距离：** 特写 / 近景 / 中景 / 牛仔 / 全身 / 远景
-- **倾斜：** dutch angle
+The dropdowns show the nearest horizontal / vertical preset and the active framing category; the readouts show the actual numeric values. Intermediate angles remain available. Connected numeric inputs disable their corresponding dropdowns. Such inputs and arbitrary connected JSON strings show a partial local preview until execution supplies the actual output.
 
-### 参数控制
+## Extra Prompts
 
-| 参数 | 范围 | 默认 | 说明 |
-|------|------|------|------|
-| XY 乘数 (开关) | 1~20, 步长 0.1 | 开启, 值=10 | 开启后同时替换方位基数和高度乘数，突破原上限 10 |
-| 总控乘数 | 0.1~10 | 1 | 独立调节基数乘数 |
-| 方位额外 | -10~10 | 0 | 方位权重加成 |
-| 高度额外 | -10~10 | 0 | 高度权重加成 |
-| 距离额外 | -10~10 | 0 | 距离权重加成 |
-| 倾斜额外 | -10~10 | 0 | 倾斜权重加成 |
+All six groups and the extreme viewpoint default to **None**, so adding the node does not silently change your prompt.
 
-各轴启用开关位于对应额外行末尾。
+| Choice | Behavior |
+| --- | --- |
+| `None` | Adds nothing from that group. |
+| `Custom` | Reveals an editable text field. Your text and existing prompt weighting are preserved. |
+| `[Tag]` preset | Uses documented booru-style vocabulary, lowercase with spaces. |
+| `[Description]` preset | Uses a concrete English caption describing a visible effect. |
 
-## 输出权重公式
+Each active group has a weight from 0.1 to 10, default 1. At 1, its text is added without an extra wrapper. Other values wrap the group's text in ComfyUI weighting syntax. Literal parentheses in built-in tags, such as `watercolor (medium)`, are escaped automatically. Custom text is left as entered.
 
-**方位：** `比例 × (weight + 额外 × 总控) × 极向门控`
+Extreme viewpoints have a separate weight from 0.1 to 50, default 1. Choosing one replaces the main node's horizontal and vertical prompt tags to avoid conflicting angles. Framing and optional Dutch angle remain active. The 3D guide still represents the numeric camera controls.
 
-**高度：** `|y| × 乘数 + 总控 × 额外`
-- 乘数：平视=15，其余=10（XY 乘数开启时替换为 xy_mult）
+Motion options describe a **still image**; they do not animate the camera. Perspective descriptions suggest a visual look rather than measured focal lengths. Keep composition choices consistent with your framing and subject prompt.
 
-**距离：** `1 + 总控 × 额外`
+See the [complete preset reference](docs/PRESET_REFERENCE.md) and [research notes with primary sources](docs/PRESET_RESEARCH.md). Anima's authors document tag and natural-language prompting, but do not publish an exhaustive per-tag support list. Individual preset effectiveness is checkpoint- and prompt-dependent; image results have not been verified in ComfyUI for this release.
 
-**倾斜：** `1 + 总控 × 额外`
+## Tags and weights
 
-**极向门控：** `|pos_y| > 0.9` 时方位权重线性衰减至 0（虫瞰/鸟瞰时无效）
+Open **Edit tags and weights** in the camera node to change direction, elevation, framing, and Dutch-angle text; enable / disable each axis; and adjust weights. Settings are saved inside the workflow. **Reset camera** preserves these edits; **Reset all tags and weights** restores their defaults.
 
-## 使用建议（illustrious 模型）
+The original angle multiplier of **10** is retained for continuity. It is an inherited setting, not a newly measured recommendation for every Anima checkpoint. Tune it with your own generations. Zero extra-weight scale is respected, and settings are isolated between nodes. Eye level now emits a tag at exactly zero degrees.
 
-> 使用 illustrious 模型时，正前/后方视角时 **XY 乘数不要超过 2**，其余时候 **不要超过 3**（待验证），否则容易出噪点图。
+## Converting upstream workflows
 
-## License
+Existing original nodes retain their original IDs. To create a separate Aitha copy of a saved JSON workflow, run:
 
-MIT
+```bash
+python tools/migrate_workflow.py path/to/original.json
+```
+
+This creates `original-aitha.json` next to the source. You can supply a different output path as the second argument. Existing output files are protected unless `--force` is supplied; the source file is never overwritten.
+
+The converter supports standard UI workflow JSON, nested subgraph definitions, plain API prompt JSON, and API requests containing a `prompt` object. It preserves node IDs, link IDs, connections, custom tag JSON, custom extra text, and unrelated workflow data. Enabled legacy text fields become `Custom`; disabled text is retained without being emitted.
+
+Conversion preserves the old **viewport position**: `horizontal = (pos_x × 180) mod 360`, `vertical = pos_y × 45 + 15`, and `zoom = pos_z × 4.5 + 5.5`. The old viewport's zero position was 15° above eye level. Corrected elevation semantics and new framing intervals can change the generated prompt, so review the result before generating.
+
+Connected legacy numeric axes, connected legacy extra fields, inline UI extra-config strings, and obsolete separate tag / weight nodes require manual migration. The converter stops with a clear error instead of silently changing their meaning. It does not translate arbitrary user-written prompts or third-party node content.
+
+## Validation and release
+
+Standalone checks, with no ComfyUI installation or GPU execution:
+
+```bash
+python -m unittest discover -s tests -p test_camera.py -v
+npm test
+npm run check
+```
+
+The frontend tests use Node's experimental VM module support to load the real extension against small DOM / app stubs. They do not run ComfyUI or WebGL. Read the [validation record](docs/VALIDATION.md) and [manual ComfyUI checklist](docs/MANUAL_COMFYUI_CHECKS.md) before publishing a release.
+
+Build a clean source ZIP with `python tools/package_release.py`. It creates a versioned ZIP and SHA-256 file in `dist/`, without caches or Git metadata. The public repository name is **Comfyui-Anima_camera_angle-Aitha**. Set your own repository URL / registry publisher information when publishing; no registry identity is assumed by this package.
+
+MIT licensed. See [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md). Anima model weights have a separate license and are not included.

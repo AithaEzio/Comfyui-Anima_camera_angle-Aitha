@@ -1,0 +1,10 @@
+{
+  "name": "comfyui-anima-camera-angle-aitha",
+  "version": "1.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-vm-modules --test tests/frontend.test.mjs",
+    "check": "node --check js/camera_angle_widget.js && node --check js/camera_logic.js"
+  }
+}
