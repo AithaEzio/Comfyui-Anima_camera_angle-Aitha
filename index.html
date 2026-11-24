@@ -1,0 +1,2431 @@
+<!doctype html>
+<!--
+  Anima Camera Angle — Prompt Composer
+  Camera preset catalog and prompt behavior adapted from
+  Comfyui-Anima_camera_angle-Aitha by AithaEzio
+  https://github.com/AithaEzio/Comfyui-Anima_camera_angle-Aitha
+
+  MIT License
+  Copyright (c) xunying7860
+  Copyright (c) 2026 Aitha
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#08080c">
+<title>Anima Camera Angle — Prompt Composer</title>
+<meta name="description" content="Build English Anima camera and illustration prompts with presets, weights, and an interactive 3D camera guide. No ComfyUI required.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%2312121a'/%3E%3Ccircle cx='12' cy='12' r='6' fill='none' stroke='%23ff7ab8' stroke-width='2'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%235ee6d0'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #08080c;
+  --bg-soft: #0b0b11;
+  --panel: #0f0f16;
+  --panel-2: #12121b;
+  --line: rgba(255, 255, 255, .075);
+  --line-strong: rgba(255, 255, 255, .14);
+  --text: #ececf3;
+  --muted: #9b9bad;
+  --faint: #838396;
+  --pink: #ff7ab8;
+  --cyan: #5ee6d0;
+  --gold: #ffc857;
+  --violet: #a99aff;
+  --prompt: #ffe7ad;
+  --danger: #ff9a92;
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --radius: 16px;
+  --shadow: 0 18px 50px -28px rgba(0, 0, 0, .9);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { color-scheme: dark; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  background:
+    radial-gradient(900px 620px at 12% -12%, rgba(255, 122, 184, .09), transparent 62%),
+    radial-gradient(820px 520px at 92% -6%, rgba(94, 230, 208, .065), transparent 58%),
+    radial-gradient(760px 700px at 50% 112%, rgba(169, 154, 255, .055), transparent 62%),
+    var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, .05) 1px, transparent 1px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 18%, #000 15%, transparent 72%);
+  mask-image: radial-gradient(ellipse at 50% 18%, #000 15%, transparent 72%);
+  opacity: .55;
+}
+::selection { background: rgba(255, 122, 184, .32); color: #fff; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--cyan); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1, h2, h3, p { margin: 0; }
+svg { display: block; }
+.icon { width: 16px; height: 16px; flex: 0 0 auto; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.skip-link {
+  position: fixed; left: 12px; top: 12px; z-index: 100;
+  padding: 8px 12px; border-radius: 8px; background: var(--text); color: var(--bg);
+  font-weight: 600; transform: translateY(-160%); transition: transform .18s ease;
+}
+.skip-link:focus { transform: translateY(0); }
+.noscript {
+  max-width: 640px; margin: 22px auto; padding: 13px 16px;
+  border: 1px solid rgba(255, 200, 87, .32); border-radius: 12px;
+  background: rgba(255, 200, 87, .07); color: #ffe3ab; font-size: 12.5px;
+}
+
+.page {
+  width: min(1480px, 100%);
+  margin: 0 auto;
+  padding: 22px clamp(16px, 3vw, 32px) 40px;
+}
+
+/* Header */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand-mark {
+  position: relative; display: grid; place-items: center;
+  width: 38px; height: 38px; flex: 0 0 auto; border-radius: 12px;
+  color: #f4f4fa; background: linear-gradient(145deg, #1b1b28, #101017);
+  border: 1px solid #2b2b3a;
+}
+.brand-mark::before {
+  content: ""; position: absolute; inset: -1px; border-radius: 13px; padding: 1px;
+  background: linear-gradient(135deg, var(--pink), var(--violet) 48%, var(--cyan));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: .72; pointer-events: none;
+}
+.brand-mark svg { width: 21px; height: 21px; }
+.brand-text { min-width: 0; }
+.brand-text h1 { font-size: 17px; font-weight: 650; letter-spacing: -.015em; white-space: nowrap; }
+.brand-text p { margin-top: 1px; font-size: 11.5px; color: var(--muted); }
+.top-actions { display: flex; align-items: center; gap: 8px; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 34px; padding: 7px 12px; border-radius: 9px;
+  border: 1px solid var(--line-strong); background: #14141d; color: var(--text);
+  font-size: 12px; font-weight: 560; line-height: 1;
+  transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+  text-decoration: none;
+}
+.btn:hover { background: #1b1b26; border-color: rgba(255, 255, 255, .2); text-decoration: none; }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .42; cursor: not-allowed; transform: none; }
+.btn.ghost { background: transparent; border-color: var(--line); color: #cfcfdd; }
+.btn.ghost:hover { background: rgba(255, 255, 255, .04); border-color: var(--line-strong); }
+.btn.primary { background: #f1f1f6; border-color: #fff; color: #0a0a10; font-weight: 620; }
+.btn.primary:hover { background: #fff; }
+.btn.primary:disabled { background: #f1f1f6; }
+.btn.copied { background: rgba(94, 230, 208, .14); border-color: rgba(94, 230, 208, .5); color: var(--cyan); }
+.btn .icon-check { display: none; }
+.btn.copied .icon-copy { display: none; }
+.btn.copied .icon-check { display: block; }
+.icon-btn {
+  display: inline-grid; place-items: center; width: 30px; height: 30px; flex: 0 0 auto;
+  border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--muted);
+  transition: color .16s ease, background .16s ease, border-color .16s ease;
+}
+.icon-btn:hover { color: var(--text); background: rgba(255, 255, 255, .05); border-color: var(--line-strong); }
+.icon-btn svg { width: 15px; height: 15px; }
+
+/* Layout */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 22px;
+}
+.controls { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.stage { display: flex; flex-direction: column; gap: 16px; min-width: 0; position: sticky; top: 18px; }
+
+/* Panels */
+.panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .018));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .04);
+  padding: 18px;
+  min-width: 0;
+}
+.panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.panel-head h2 {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: 13px; font-weight: 640; letter-spacing: .005em;
+}
+.panel-sub { margin-top: 3px; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
+.badge {
+  display: inline-flex; align-items: center; height: 18px; padding: 0 7px;
+  border: 1px solid var(--line); border-radius: 99px; background: rgba(255, 255, 255, .025);
+  font-size: 10px; font-weight: 560; color: var(--faint); letter-spacing: .02em;
+}
+
+/* Inputs */
+select, input[type="number"], input[type="text"], textarea {
+  width: 100%; min-width: 0;
+  border: 1px solid #272734; border-radius: 9px;
+  background-color: #0b0b12; color: var(--text);
+  padding: 7px 9px; font-size: 12.5px; line-height: 1.35;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+select:hover, input[type="number"]:hover, input[type="text"]:hover, textarea:hover { border-color: #343445; }
+select:focus, input[type="number"]:focus, input[type="text"]:focus, textarea:focus { border-color: rgba(169, 154, 255, .62); background-color: #0d0d15; }
+select {
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+  padding-right: 28px; text-overflow: ellipsis;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%238e8ea1' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 9px center; background-size: 11px;
+}
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; font-variant-numeric: tabular-nums; }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+textarea { resize: vertical; line-height: 1.5; }
+input[type="checkbox"] { width: 15px; height: 15px; margin: 0; accent-color: var(--violet); cursor: pointer; }
+:where(select, input, textarea, button, summary, a):focus-visible {
+  outline: 2px solid rgba(169, 154, 255, .72); outline-offset: 2px;
+}
+select:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Camera rows */
+.axis-list { display: flex; flex-direction: column; gap: 9px; }
+.axis {
+  display: grid;
+  grid-template-columns: 8px minmax(62px, auto) minmax(0, 1fr) 76px;
+  grid-template-areas: "dot label select num";
+  gap: 9px; align-items: center;
+  transition: opacity .18s ease;
+}
+.axis-dot {
+  grid-area: dot; width: 7px; height: 7px; border-radius: 50%;
+  background: currentColor; box-shadow: 0 0 10px currentColor;
+}
+.axis[data-axis="horizontal_angle"] .axis-dot { color: var(--pink); }
+.axis[data-axis="vertical_angle"] .axis-dot { color: var(--cyan); }
+.axis[data-axis="zoom"] .axis-dot { color: var(--gold); }
+.axis-label { grid-area: label; font-size: 12.5px; color: #d7d7e3; white-space: nowrap; }
+.axis select { grid-area: select; }
+.num-wrap { grid-area: num; position: relative; }
+.num-wrap input { text-align: right; padding-right: 20px; font-family: var(--mono); font-size: 11.5px; }
+.num-wrap .unit {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  font-size: 10px; color: var(--faint); pointer-events: none;
+}
+.num-wrap.no-unit input { padding-right: 8px; }
+.axis.is-muted { opacity: .44; }
+.axis.is-muted select, .axis.is-muted input { cursor: not-allowed; }
+
+/* Switch */
+.switch-row {
+  display: flex; align-items: flex-start; gap: 10px; margin-top: 15px; padding-top: 15px;
+  border-top: 1px solid var(--line); cursor: pointer;
+}
+.switch { position: relative; width: 34px; height: 20px; flex: 0 0 auto; margin-top: 1px; }
+.switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.switch .track {
+  position: absolute; inset: 0; border-radius: 99px; border: 1px solid #343442;
+  background: #22222e; transition: background .18s ease, border-color .18s ease;
+}
+.switch .track::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px;
+  border-radius: 50%; background: #8b8b9e; transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+}
+.switch input:checked + .track { background: rgba(255, 122, 184, .2); border-color: rgba(255, 122, 184, .55); }
+.switch input:checked + .track::after { transform: translateX(14px); background: var(--pink); box-shadow: 0 0 9px rgba(255, 122, 184, .8); }
+.switch input:focus-visible + .track { outline: 2px solid rgba(169, 154, 255, .72); outline-offset: 2px; }
+.switch-copy { display: flex; flex-direction: column; gap: 1px; }
+.switch-copy strong { font-size: 12.5px; font-weight: 560; color: #d7d7e3; }
+.switch-copy small { font-size: 10.5px; line-height: 1.4; color: var(--faint); }
+
+/* Subsection */
+.subhead {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin: 16px 0 10px; padding-top: 15px; border-top: 1px solid var(--line);
+}
+.subhead h3 {
+  font-size: 10.5px; font-weight: 620; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--muted);
+}
+.tag-note {
+  font-size: 9.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+  color: rgba(255, 200, 87, .82); border: 1px solid rgba(255, 200, 87, .22);
+  border-radius: 99px; padding: 1px 6px; white-space: nowrap;
+}
+
+/* Weight control */
+.weight {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) 58px;
+  gap: 9px; align-items: center; margin-top: 9px;
+}
+.weight > label {
+  font-size: 9.5px; font-weight: 620; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--faint);
+}
+.weight input[type="number"] { text-align: center; font-family: var(--mono); font-size: 11px; padding: 6px 4px; }
+input[type="range"] {
+  --fill: 0%;
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 20px; margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 99px;
+  background: linear-gradient(90deg, var(--violet) 0%, var(--pink) var(--fill), #272734 var(--fill), #272734 100%);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px; margin-top: -5px; border-radius: 50%;
+  background: #f2f2f8; border: 1px solid #fff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .65), 0 0 0 3px rgba(169, 154, 255, .12);
+}
+input[type="range"]::-moz-range-track { height: 4px; border-radius: 99px; background: #272734; }
+input[type="range"]::-moz-range-progress { height: 4px; border-radius: 99px; background: linear-gradient(90deg, var(--violet), var(--pink)); }
+input[type="range"]::-moz-range-thumb {
+  width: 13px; height: 13px; border-radius: 50%; background: #f2f2f8;
+  border: 1px solid #fff; box-shadow: 0 1px 5px rgba(0, 0, 0, .65);
+}
+input[type="range"]:focus-visible { outline-offset: 4px; }
+
+/* Extra groups */
+.groups { display: flex; flex-direction: column; }
+.group { padding: 12px 0; border-top: 1px solid var(--line); min-width: 0; }
+.group:first-child { border-top: 0; padding-top: 2px; }
+.group-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+.group-label { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 560; color: #cfcfdc; }
+.group-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: #3b3b4b;
+  transition: background .18s ease, box-shadow .18s ease;
+}
+.group.is-active .group-dot { background: var(--violet); box-shadow: 0 0 8px rgba(169, 154, 255, .85); }
+.group.is-active .group-label { color: #fff; }
+.count {
+  font-size: 9.5px; color: var(--faint); border: 1px solid var(--line);
+  border-radius: 99px; padding: 0 5px; line-height: 15px;
+}
+.group select { width: 100%; }
+.group-value {
+  margin: 6px 1px 0; font-size: 11px; line-height: 1.4; color: #9292a6;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+  overflow: hidden; overflow-wrap: anywhere;
+}
+.group-value.is-empty { font-style: italic; opacity: .8; }
+.custom-row { margin-top: 8px; }
+.custom-row textarea { min-height: 56px; max-height: 150px; font-size: 12px; }
+.group .weight { margin-top: 8px; }
+
+/* Advanced */
+.advanced { padding: 0; overflow: hidden; }
+.advanced > summary {
+  list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 16px 18px; cursor: pointer; user-select: none;
+  font-size: 12.5px; font-weight: 560; color: #d6d6e2;
+}
+.advanced > summary::-webkit-details-marker { display: none; }
+.advanced > summary:hover { background: rgba(255, 255, 255, .025); }
+.summary-right { display: inline-flex; align-items: center; gap: 8px; }
+.summary-hint {
+  font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--faint);
+  border: 1px solid var(--line); border-radius: 99px; padding: 1px 6px;
+}
+.summary-hint.is-custom { color: var(--gold); border-color: rgba(255, 200, 87, .28); }
+.summary-chevron { width: 14px; height: 14px; color: var(--faint); transition: transform .18s ease; }
+.advanced[open] .summary-chevron { transform: rotate(90deg); }
+.advanced-body { padding: 0 18px 18px; border-top: 1px solid var(--line); }
+.advanced-body > .hint { margin: 12px 0 0; font-size: 10.5px; line-height: 1.5; color: var(--faint); }
+.adv-global { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px; margin-top: 12px; }
+.adv-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.adv-field > span, .adv-check > span { font-size: 9.5px; font-weight: 620; letter-spacing: .07em; text-transform: uppercase; color: var(--faint); }
+.adv-field input { font-size: 11.5px; padding: 6px 8px; }
+.adv-check {
+  display: flex; align-items: center; gap: 8px; min-height: 31px;
+  padding: 5px 9px; border: 1px solid #272734; border-radius: 9px; background: #0b0b12;
+}
+.adv-check > span { text-transform: none; letter-spacing: 0; font-size: 11px; font-weight: 500; color: var(--muted); }
+fieldset.adv-group { border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px 12px; margin: 12px 0 0; min-width: 0; }
+fieldset.adv-group legend {
+  padding: 0 5px; font-size: 9.5px; font-weight: 620; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted);
+}
+.adv-group .adv-global { margin-top: 2px; }
+.adv-tags { display: grid; grid-template-columns: repeat(auto-fit, minmax(142px, 1fr)); gap: 8px; margin-top: 10px; }
+.adv-tags label { display: flex; flex-direction: column; gap: 3px; font-size: 9.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--faint); }
+.adv-tags input { font-size: 11.5px; padding: 6px 8px; text-transform: none; letter-spacing: 0; }
+.advanced-actions { display: flex; justify-content: flex-end; margin-top: 14px; }
+
+/* Viewport */
+.viewport-panel { padding: 10px; }
+.viewport {
+  position: relative; width: 100%; height: clamp(300px, 44vh, 480px);
+  border: 1px solid #202030; border-radius: 12px; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 36%, #151525 0%, #0a0a11 68%, #08080d 100%);
+}
+#scene { display: block; width: 100%; height: 100%; touch-action: none; cursor: default; outline: none; }
+#scene.dragging { cursor: grabbing; }
+#scene:focus-visible { outline: 2px solid rgba(169, 154, 255, .7); outline-offset: -2px; }
+.hud { position: absolute; display: flex; gap: 6px; pointer-events: none; }
+.hud-top { top: 10px; left: 10px; right: 10px; justify-content: space-between; align-items: flex-start; }
+.hud-chip {
+  max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 10.5px; color: #d3d3e0; background: rgba(9, 9, 15, .64);
+  border: 1px solid rgba(255, 255, 255, .09); border-radius: 7px; padding: 4px 8px;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.hud-chip.subtle { color: #a5a5b8; }
+.hud-bottom {
+  left: 10px; bottom: 9px; gap: 12px; font-size: 9.5px; letter-spacing: .03em;
+  color: #8f8fa2; text-transform: uppercase;
+}
+.hud-bottom span { display: inline-flex; align-items: center; gap: 5px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+.dot.pink { color: var(--pink); }
+.dot.cyan { color: var(--cyan); }
+.dot.gold { color: var(--gold); }
+.handle-tip {
+  position: absolute; z-index: 2; transform: translate(-50%, -140%);
+  padding: 3px 7px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(9, 9, 15, .94); color: #e8e8f2; font: 10.5px/1.4 var(--mono);
+  white-space: nowrap; pointer-events: none; box-shadow: 0 8px 22px rgba(0, 0, 0, .55);
+}
+.viewport-help {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin: 9px 6px 2px; font-size: 10.5px; color: var(--faint);
+}
+.viewport-help .mono { color: #a9a9bb; }
+
+/* Prompt */
+.prompt-panel { padding: 16px 18px 14px; }
+.prompt-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 11px; }
+.prompt-title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.prompt-title h2 { font-size: 13px; font-weight: 640; }
+.mode-switch {
+  display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--line);
+  border-radius: 9px; background: #0a0a10;
+}
+.mode-switch button {
+  border: 0; border-radius: 7px; background: transparent; color: var(--muted);
+  padding: 5px 9px; font-size: 10.5px; font-weight: 560; line-height: 1.2;
+  transition: background .15s ease, color .15s ease;
+}
+.mode-switch button:hover { color: #dddde8; }
+.mode-switch button[aria-pressed="true"] { background: #232330; color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06); }
+.prompt-output {
+  width: 100%; height: 112px; min-height: 112px; max-height: 280px;
+  padding: 12px 13px; resize: none; overflow: auto;
+  border: 1px solid #252532; border-radius: 11px; background: #09090e;
+  color: var(--prompt); font: 12.5px/1.7 var(--mono);
+  caret-color: transparent; tab-size: 2;
+}
+.prompt-output:focus { border-color: rgba(255, 200, 87, .38); }
+.prompt-output.is-error { color: var(--danger); }
+.prompt-note {
+  margin: 8px 2px 0; font-size: 10.5px; line-height: 1.45; color: var(--faint);
+  display: flex; align-items: flex-start; gap: 6px;
+}
+.prompt-note::before {
+  content: ""; width: 5px; height: 5px; flex: 0 0 auto; margin-top: 5px;
+  border-radius: 50%; background: var(--gold); opacity: .8;
+}
+.prompt-note.is-error { color: var(--danger); }
+.prompt-note.is-error::before { background: var(--danger); }
+.prompt-note.is-muted::before { background: #4a4a5a; }
+.prompt-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  margin-top: 9px; font-size: 10px; color: #666677; font-variant-numeric: tabular-nums;
+}
+
+/* Footer */
+.footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line);
+  font-size: 10.5px; color: #666677;
+}
+.footer a { color: #8f8fa2; }
+.footer a:hover { color: var(--cyan); }
+
+/* Toast */
+.toast {
+  position: fixed; left: 50%; bottom: 24px; z-index: 50;
+  display: flex; align-items: center; gap: 14px;
+  padding: 9px 12px; border: 1px solid #2e2e3c; border-radius: 10px;
+  background: #15151f; color: #e6e6f0; font-size: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .6);
+  opacity: 0; pointer-events: none; transform: translate(-50%, 14px);
+  transition: opacity .18s ease, transform .18s ease;
+  max-width: min(92vw, 520px);
+}
+.toast.show { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+.toast button {
+  border: 0; background: transparent; color: var(--cyan); font-size: 11px; font-weight: 650;
+  padding: 2px 3px; white-space: nowrap;
+}
+.toast button:hover { text-decoration: underline; }
+
+/* Scrollbars */
+* { scrollbar-width: thin; scrollbar-color: #2a2a36 transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #262632; border-radius: 99px; border: 3px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: #343442; background-clip: content-box; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .stage { position: static; order: -1; }
+  .viewport { height: clamp(280px, 48vw, 440px); }
+  .brand-text p { display: none; }
+}
+@media (max-width: 640px) {
+  .page { padding: 14px 12px 28px; }
+  .topbar { gap: 10px; padding-bottom: 14px; }
+  .brand { gap: 9px; }
+  .brand-mark { width: 34px; height: 34px; border-radius: 10px; }
+  .brand-text h1 { font-size: 15px; }
+  .btn { padding: 6px 9px; }
+  .panel { padding: 15px; border-radius: 14px; }
+  .axis {
+    grid-template-columns: 8px minmax(0, 1fr) 76px;
+    grid-template-areas: "dot label num" ". select select";
+    row-gap: 7px;
+  }
+  .axis select { width: 100%; }
+  .viewport { height: 280px; }
+  .hud-top { flex-direction: column; align-items: flex-start; gap: 5px; }
+  .hud-chip { max-width: 100%; }
+  .hud-bottom { gap: 9px; font-size: 8.5px; }
+  .prompt-head { align-items: flex-start; }
+  .prompt-title { gap: 8px; }
+  .prompt-output { font-size: 12px; }
+  .footer { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .adv-tags { grid-template-columns: 1fr 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important; scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#prompt-panel">Skip to prompt</a>
+<noscript>
+  <p class="noscript">This prompt composer needs JavaScript. Enable it and reload the page.</p>
+</noscript>
+<div class="page">
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="8.2"></circle>
+        <path d="M12 3.8v16.4M3.8 12h16.4"></path>
+        <path d="M6.2 6.2 17.8 17.8M17.8 6.2 6.2 17.8" opacity=".38"></path>
+      </svg>
+    </span>
+    <div class="brand-text">
+      <h1>Anima Camera Angle</h1>
+      <p>Prompt composer · Aitha</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button class="btn ghost" id="reset-all" type="button" title="Reset camera, extras, and tag settings">Reset all</button>
+    <a class="btn ghost" href="https://github.com/AithaEzio/Comfyui-Anima_camera_angle-Aitha" target="_blank" rel="noreferrer" title="View the source node on GitHub" aria-label="View the source node on GitHub">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 4h6v6"></path><path d="m20 4-9 9"></path>
+        <path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"></path>
+      </svg>
+    </a>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="controls" aria-label="Prompt controls">
+    <section class="panel" aria-labelledby="camera-heading">
+      <div class="panel-head">
+        <div>
+          <h2 id="camera-heading">Camera</h2>
+          <p class="panel-sub">Angles drive the prompt. Use a preset, type a value, or drag the 3D handles.</p>
+        </div>
+        <button class="icon-btn" id="reset-camera" type="button" title="Reset camera" aria-label="Reset camera">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3"></path><path d="M3.5 4.5v5h5"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="axis-list" id="axis-list">
+        <div class="axis" data-axis="horizontal_angle">
+          <span class="axis-dot" aria-hidden="true"></span>
+          <label class="axis-label" for="preset-horizontal_angle">Horizontal</label>
+          <select id="preset-horizontal_angle" data-axis-select="horizontal_angle" aria-label="Horizontal camera preset"></select>
+          <div class="num-wrap">
+            <input id="value-horizontal_angle" data-axis-input="horizontal_angle" type="number" min="0" max="360" step="1" inputmode="decimal" aria-label="Horizontal angle in degrees">
+            <span class="unit" aria-hidden="true">°</span>
+          </div>
+        </div>
+        <div class="axis" data-axis="vertical_angle">
+          <span class="axis-dot" aria-hidden="true"></span>
+          <label class="axis-label" for="preset-vertical_angle">Vertical</label>
+          <select id="preset-vertical_angle" data-axis-select="vertical_angle" aria-label="Vertical camera preset"></select>
+          <div class="num-wrap">
+            <input id="value-vertical_angle" data-axis-input="vertical_angle" type="number" min="-30" max="60" step="1" inputmode="decimal" aria-label="Vertical angle in degrees">
+            <span class="unit" aria-hidden="true">°</span>
+          </div>
+        </div>
+        <div class="axis" data-axis="zoom">
+          <span class="axis-dot" aria-hidden="true"></span>
+          <label class="axis-label" for="preset-zoom">Distance</label>
+          <select id="preset-zoom" data-axis-select="zoom" aria-label="Distance preset"></select>
+          <div class="num-wrap no-unit">
+            <input id="value-zoom" data-axis-input="zoom" type="number" min="0" max="10" step="0.1" inputmode="decimal" aria-label="Distance zoom value">
+          </div>
+        </div>
+      </div>
+
+      <label class="switch-row" for="roll">
+        <span class="switch">
+          <input id="roll" type="checkbox" aria-describedby="roll-help">
+          <span class="track" aria-hidden="true"></span>
+        </span>
+        <span class="switch-copy">
+          <strong>Dutch angle</strong>
+          <small id="roll-help">Adds the tilt tag. The node treats any value above zero as on.</small>
+        </span>
+      </label>
+
+      <div class="subhead">
+        <h3>Extreme viewpoint</h3>
+        <span class="tag-note">replaces H + V</span>
+      </div>
+      <select id="extreme-type" aria-label="Extreme viewpoint preset" aria-describedby="extreme-preview"></select>
+      <p class="group-value" id="extreme-preview" hidden></p>
+      <div class="weight" id="extreme-weight-row" hidden>
+        <label for="extreme-weight">Weight</label>
+        <input type="range" id="extreme-weight-range" min="0.1" max="50" step="0.1" aria-label="Extreme viewpoint weight slider">
+        <input type="number" id="extreme-weight" min="0.1" max="50" step="0.1" aria-label="Extreme viewpoint weight">
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="extras-heading">
+      <div class="panel-head">
+        <div>
+          <h2 id="extras-heading">Extra prompts <span class="badge" id="extras-count">0 active</span></h2>
+          <p class="panel-sub">Optional tags appended to the camera prompt. None skips a group.</p>
+        </div>
+        <button class="icon-btn" id="clear-extras" type="button" title="Clear all extra prompts" aria-label="Clear all extra prompts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 7h16"></path><path d="M9 7V5h6v2"></path>
+            <path d="m7 7 1 12.2a1 1 0 0 0 1 .8h6a1 1 0 0 0 1-.8L17 7"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="groups" id="groups"></div>
+    </section>
+
+    <details class="panel advanced" id="advanced">
+      <summary>
+        <span>Advanced tags &amp; weights</span>
+        <span class="summary-right">
+          <span class="summary-hint" id="advanced-hint">defaults</span>
+          <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m9 6 6 6-6 6"></path>
+          </svg>
+        </span>
+      </summary>
+      <div class="advanced-body" id="advanced-body"></div>
+    </details>
+  </section>
+
+  <aside class="stage" aria-label="3D guide and generated prompt">
+    <section class="panel viewport-panel" aria-labelledby="viewport-heading">
+      <h2 class="sr-only" id="viewport-heading">Interactive 3D camera guide</h2>
+      <div class="viewport" id="viewport">
+        <canvas id="scene" tabindex="0" role="application" aria-label="Interactive 3D camera guide"></canvas>
+        <div class="hud hud-top">
+          <span class="hud-chip" id="hud-view">Front view · 0° / 0°</span>
+          <span class="hud-chip subtle" id="hud-frame">Medium shot · 4.0</span>
+        </div>
+        <div class="hud hud-bottom" aria-hidden="true">
+          <span><i class="dot pink"></i>Horizontal</span>
+          <span><i class="dot cyan"></i>Vertical</span>
+          <span><i class="dot gold"></i>Distance</span>
+        </div>
+        <div class="handle-tip" id="handle-tip" hidden></div>
+      </div>
+      <div class="viewport-help">
+        <span>Drag handles · scroll to zoom · double-click resets</span>
+        <span class="mono" id="camera-readout">0° / 0° · 4.0</span>
+      </div>
+    </section>
+
+    <section class="panel prompt-panel" id="prompt-panel" tabindex="-1" aria-labelledby="prompt-heading">
+      <div class="prompt-head">
+        <div class="prompt-title">
+          <h2 id="prompt-heading">Prompt</h2>
+          <div class="mode-switch" role="group" aria-label="Prompt mode">
+            <button type="button" class="mode-btn" data-mode="camera" aria-pressed="true">Camera + extras</button>
+            <button type="button" class="mode-btn" data-mode="extras" aria-pressed="false">Extras only</button>
+          </div>
+        </div>
+        <button class="btn primary" id="copy-prompt" type="button" title="Copy the prompt to the clipboard">
+          <svg class="icon icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+            <path d="M5 15V5a2 2 0 0 1 2-2h8"></path>
+          </svg>
+          <svg class="icon icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+          <span id="copy-label">Copy</span>
+        </button>
+      </div>
+      <textarea class="prompt-output" id="prompt-output" readonly spellcheck="false" aria-label="Generated prompt" placeholder="Your prompt will appear here…"></textarea>
+      <p class="prompt-note" id="prompt-note"></p>
+      <div class="prompt-foot">
+        <span id="char-count">0 characters</span>
+        <span>ComfyUI weighting syntax</span>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<footer class="footer">
+  <span>Prompt-only tool. No ComfyUI connection, model, or image generation.</span>
+  <span><a href="https://github.com/AithaEzio/Comfyui-Anima_camera_angle-Aitha" target="_blank" rel="noreferrer">Preset logic and catalog from Aitha's MIT-licensed node</a>.</span>
+</footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="application/json" id="camera-data">{"defaults":{"weight_min":0.1,"weight_max":10.0,"extra_master":1.0,"xy_mult_enabled":true,"xy_mult":10.0,"azimuth":{"weight":10.0,"extra":0.0,"deadzone_ratio":0.05,"enabled":true,"directions":{"front":{"tag":"straight-on"},"back":{"tag":"from behind"},"left":{"tag":"from side, facing right"},"right":{"tag":"from side, facing left"}}},"elevation":{"extra":0.0,"enabled":true,"categories":{"high":{"tag":"from above"},"eye":{"tag":"eye-level view"},"low":{"tag":"from below"}}},"distance":{"extra":0.0,"enabled":true,"categories":{"ecu":{"tag":"extreme close-up"},"cu":{"tag":"close-up"},"medium":{"tag":"upper body"},"cowboy_shot":{"tag":"cowboy shot"},"full":{"tag":"full body"},"wide":{"tag":"wide shot"}}},"tilt":{"extra":0.0,"deadzone":0.15,"enabled":true,"dutch_tag":"dutch angle"}},"camera_presets":{"horizontal_angle":[{"label":"Front view","value":0},{"label":"Front-right quarter view","value":45},{"label":"Right side view","value":90},{"label":"Back-right quarter view","value":135},{"label":"Back view","value":180},{"label":"Back-left quarter view","value":225},{"label":"Left side view","value":270},{"label":"Front-left quarter view","value":315}],"vertical_angle":[{"label":"Low-angle shot","value":-30},{"label":"Eye-level shot","value":0},{"label":"Elevated shot","value":30},{"label":"High-angle shot","value":60}],"zoom":[{"label":"Wide shot","value":1},{"label":"Full body","value":2.5},{"label":"Cowboy shot","value":3},{"label":"Medium shot","value":4},{"label":"Close-up","value":8},{"label":"Extreme close-up","value":10}]},"extreme_presets":[{"label":"None","value":"","kind":"none"},{"label":"Bird's-eye view [Tag]","value":"bird's eye view","kind":"tag"},{"label":"Worm's-eye view [Description]","value":"The camera is near the ground and looks steeply upward at the subject.","kind":"description"},{"label":"Directly overhead [Description]","value":"The camera looks straight down at the subject from directly overhead.","kind":"description"},{"label":"Directly underneath [Description]","value":"The camera looks straight up at the subject from directly underneath.","kind":"description"}],"extra_groups":[{"key":"lens","label":"Lens / perspective","tooltip":"Illustrated perspective and lens effects. Lens descriptions are visual suggestions, not calibrated optics.","presets":[{"label":"Fisheye distortion [Tag]","value":"fisheye","kind":"tag"},{"label":"Strong perspective [Tag]","value":"perspective","kind":"tag"},{"label":"Foreshortening [Tag]","value":"foreshortening","kind":"tag"},{"label":"Atmospheric perspective [Tag]","value":"atmospheric perspective","kind":"tag"},{"label":"Vanishing point [Tag]","value":"vanishing point","kind":"tag"},{"label":"Panorama [Tag]","value":"panorama","kind":"tag"},{"label":"Isometric perspective [Tag]","value":"isometric","kind":"tag"},{"label":"Wide-angle look [Description]","value":"A wide-angle perspective shows the subject together with a broad view of the surroundings.","kind":"description"},{"label":"Ultra-wide perspective [Description]","value":"An exaggerated wide-angle perspective makes nearby objects appear much larger than distant objects.","kind":"description"},{"label":"Natural perspective [Description]","value":"The scene has natural proportions with little perspective distortion.","kind":"description"},{"label":"Telephoto compression [Description]","value":"A compressed perspective makes the background appear close behind the subject.","kind":"description"},{"label":"Orthographic look [Description]","value":"Parallel edges remain parallel and objects do not shrink noticeably with distance.","kind":"description"},{"label":"Macro detail [Description]","value":"A tiny detail fills the frame and its fine surface texture is clearly visible.","kind":"description"},{"label":"Enlarged foreground [Description]","value":"An object close to the viewer appears large while the subject and background recede behind it.","kind":"description"},{"label":"Layered depth [Description]","value":"Near objects overlap the subject and distant scenery to create clear layers of depth.","kind":"description"}]},{"key":"dof","label":"Focus / depth of field","tooltip":"Choose what stays sharp and what becomes blurry. Deep focus is an English description, not a depth-of-field blur tag.","presets":[{"label":"Depth of field [Tag]","value":"depth of field","kind":"tag"},{"label":"Blurry background [Tag]","value":"blurry background","kind":"tag"},{"label":"Blurry foreground [Tag]","value":"blurry foreground","kind":"tag"},{"label":"Bokeh [Tag]","value":"bokeh","kind":"tag"},{"label":"Soft focus [Tag]","value":"soft focus","kind":"tag"},{"label":"Shallow focus [Description]","value":"The subject is sharply focused while the background falls softly out of focus.","kind":"description"},{"label":"Deep focus [Description]","value":"The foreground and distant background are both sharply focused.","kind":"description"},{"label":"Face in focus [Description]","value":"The face is sharply focused while the surroundings are softly blurred.","kind":"description"},{"label":"Eyes in focus [Description]","value":"The eyes are the sharpest part of the image and the background is softly blurred.","kind":"description"},{"label":"Hands in focus [Description]","value":"The hands and the object they hold are sharply focused while the background is blurred.","kind":"description"},{"label":"Subject isolated by focus [Description]","value":"The subject is sharp between a softly blurred foreground and a softly blurred background.","kind":"description"},{"label":"Distant haze [Description]","value":"The nearby subject is clear while distant scenery fades into a soft atmospheric haze.","kind":"description"}]},{"key":"movement","label":"Motion effects","tooltip":"Visible motion cues for a still image. These do not animate the camera or generate video.","presets":[{"label":"Motion blur [Tag]","value":"motion blur","kind":"tag"},{"label":"Motion lines [Tag]","value":"motion lines","kind":"tag"},{"label":"Speed lines [Tag]","value":"speed lines","kind":"tag"},{"label":"Afterimage [Tag]","value":"afterimage","kind":"tag"},{"label":"Frozen action [Description]","value":"The subject is captured sharply in the middle of a fast action.","kind":"description"},{"label":"Panning blur [Description]","value":"The moving subject remains sharp while the background streaks horizontally.","kind":"description"},{"label":"Radial motion blur [Description]","value":"Blur streaks radiate outward from the subject to suggest rapid movement toward the viewer.","kind":"description"},{"label":"Wind-swept motion [Description]","value":"Hair and loose clothing stream in the same direction in a strong wind.","kind":"description"},{"label":"Falling motion [Description]","value":"The subject is suspended mid-fall with hair and loose fabric trailing upward.","kind":"description"},{"label":"Gentle motion [Description]","value":"A small movement gently lifts loose hair and fabric.","kind":"description"},{"label":"Dynamic action [Description]","value":"The subject is shown mid-action with a strong diagonal line of movement through the body.","kind":"description"},{"label":"Still pose [Description]","value":"The subject and the surroundings are motionless with crisp edges.","kind":"description"}]},{"key":"composition","label":"Composition","tooltip":"Subject placement and framing. Choose a preset that agrees with the camera framing and viewpoint.","presets":[{"label":"Negative space [Tag]","value":"negative space","kind":"tag"},{"label":"Symmetry [Tag]","value":"symmetry","kind":"tag"},{"label":"Letterboxed [Tag]","value":"letterboxed","kind":"tag"},{"label":"First-person viewpoint [Tag]","value":"pov","kind":"tag"},{"label":"Portrait framing [Tag]","value":"portrait","kind":"tag"},{"label":"Upper-body framing [Tag]","value":"upper body","kind":"tag"},{"label":"Full-body framing [Tag]","value":"full body","kind":"tag"},{"label":"Landscape [Tag]","value":"landscape","kind":"tag"},{"label":"Scenery [Tag]","value":"scenery","kind":"tag"},{"label":"Silhouette [Tag]","value":"silhouette","kind":"tag"},{"label":"Centered subject [Description]","value":"The subject is centered in the frame.","kind":"description"},{"label":"Rule of thirds [Description]","value":"The subject is placed near a rule-of-thirds intersection with open space on the opposite side.","kind":"description"},{"label":"Leading lines [Description]","value":"Lines in the environment lead the eye toward the subject.","kind":"description"},{"label":"Frame within a frame [Description]","value":"An archway or doorway surrounds the subject and forms a frame inside the image.","kind":"description"},{"label":"Foreground / middle / background [Description]","value":"The image has a distinct foreground, a subject in the middle distance, and a distant background.","kind":"description"},{"label":"Diagonal composition [Description]","value":"The main shapes run diagonally across the frame.","kind":"description"},{"label":"Subject on the left [Description]","value":"The subject occupies the left third of the image with open space on the right.","kind":"description"},{"label":"Subject on the right [Description]","value":"The subject occupies the right third of the image with open space on the left.","kind":"description"},{"label":"Over-the-shoulder [Description]","value":"The scene is viewed over a foreground character's shoulder toward the main subject.","kind":"description"},{"label":"Small subject / large setting [Description]","value":"The subject appears small within a large, detailed environment.","kind":"description"},{"label":"Triangular arrangement [Description]","value":"The main visible elements form a clear triangular arrangement.","kind":"description"},{"label":"Room to look into [Description]","value":"Open space extends in front of the direction the subject is facing.","kind":"description"}]},{"key":"style","label":"Illustration style","tooltip":"Art styles and media found in illustration tagging. No artist names or automatic quality / score tags are added.","presets":[{"label":"Anime screenshot [Tag]","value":"anime screenshot","kind":"tag"},{"label":"Official art [Tag]","value":"official art","kind":"tag"},{"label":"Line art [Tag]","value":"lineart","kind":"tag"},{"label":"Sketch [Tag]","value":"sketch","kind":"tag"},{"label":"Painterly [Tag]","value":"painterly","kind":"tag"},{"label":"Pixel art [Tag]","value":"pixel art","kind":"tag"},{"label":"Ink wash painting [Tag]","value":"ink wash painting","kind":"tag"},{"label":"Watercolor [Tag]","value":"watercolor (medium)","kind":"tag"},{"label":"Oil painting [Tag]","value":"oil painting (medium)","kind":"tag"},{"label":"Gouache [Tag]","value":"gouache (medium)","kind":"tag"},{"label":"Colored pencil [Tag]","value":"colored pencil (medium)","kind":"tag"},{"label":"Charcoal [Tag]","value":"charcoal (medium)","kind":"tag"},{"label":"Graphite [Tag]","value":"graphite (medium)","kind":"tag"},{"label":"Halftone [Tag]","value":"halftone","kind":"tag"},{"label":"Crosshatching [Tag]","value":"crosshatching","kind":"tag"},{"label":"Pointillism [Tag]","value":"pointillism","kind":"tag"},{"label":"Art Nouveau [Tag]","value":"art nouveau","kind":"tag"},{"label":"Art Deco [Tag]","value":"art deco","kind":"tag"},{"label":"Ukiyo-e [Tag]","value":"ukiyo-e","kind":"tag"},{"label":"Impressionism [Tag]","value":"impressionism","kind":"tag"},{"label":"Minimalism [Tag]","value":"minimalism","kind":"tag"},{"label":"Abstract [Tag]","value":"abstract","kind":"tag"},{"label":"Surreal [Tag]","value":"surreal","kind":"tag"},{"label":"Flat-color anime [Description]","value":"The illustration uses clean outlines, flat color areas, and simple cel shading.","kind":"description"}]},{"key":"lighting","label":"Lighting","tooltip":"Optional lighting direction, source, and atmosphere. Lighting affects appearance; it does not change the 3D viewport lights.","presets":[{"label":"Backlighting [Tag]","value":"backlighting","kind":"tag"},{"label":"Light from above [Tag]","value":"overlighting","kind":"tag"},{"label":"Side lighting [Tag]","value":"sidelighting","kind":"tag"},{"label":"Light from below [Tag]","value":"underlighting","kind":"tag"},{"label":"Sunlight [Tag]","value":"sunlight","kind":"tag"},{"label":"Moonlight [Tag]","value":"moonlight","kind":"tag"},{"label":"Dappled sunlight [Tag]","value":"dappled sunlight","kind":"tag"},{"label":"Light rays [Tag]","value":"light rays","kind":"tag"},{"label":"Dim lighting [Tag]","value":"dim lighting","kind":"tag"},{"label":"Spotlight [Tag]","value":"spotlight","kind":"tag"},{"label":"Bloom [Tag]","value":"bloom","kind":"tag"},{"label":"Chiaroscuro [Tag]","value":"chiaroscuro","kind":"tag"},{"label":"Candlelight [Tag]","value":"candlelight","kind":"tag"},{"label":"Caustics [Tag]","value":"caustics","kind":"tag"},{"label":"Rim light [Description]","value":"A narrow rim of light traces the outer edge of the subject.","kind":"description"},{"label":"Soft window light [Description]","value":"Soft daylight enters through a nearby window and gently lights one side of the subject.","kind":"description"},{"label":"Golden-hour light [Description]","value":"Low, warm sunlight creates long shadows and a golden glow.","kind":"description"},{"label":"Overcast daylight [Description]","value":"An overcast sky creates soft, even illumination with faint shadows.","kind":"description"},{"label":"Neon light [Description]","value":"Colored neon lights cast vivid pink and blue light across the subject.","kind":"description"},{"label":"Soft diffuse light [Description]","value":"Broad, diffuse light illuminates the subject with soft shadows.","kind":"description"},{"label":"Warm / cool split light [Description]","value":"Warm light illuminates one side of the subject while cool light illuminates the other.","kind":"description"},{"label":"Bright background silhouette [Description]","value":"The subject appears as a dark silhouette against a bright background.","kind":"description"}]}]}</script>
+<script>
+"use strict";
+
+/* =====================================================================
+   Data and logic — faithful port of camera_core.py / camera_logic.js.
+   The catalog lives in the JSON block above; logic is pure and DOM-free.
+   ===================================================================== */
+const DATA = JSON.parse(document.getElementById("camera-data").textContent);
+
+const Logic = (() => {
+  const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+
+  function number(value, fallback, min = -Infinity, max = Infinity) {
+    if (!["number", "string"].includes(typeof value)) return fallback;
+    if (typeof value === "string" && !value.trim()) return fallback;
+    if (typeof value === "string" && !/^[+-]?(?:[0-9]+\.?[0-9]*|\.[0-9]+)(?:e[+-]?[0-9]+)?$/i.test(value.trim())) return fallback;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
+  }
+
+  function object(value, label) {
+    if (value === null || value === undefined || value === "") return {};
+    if (typeof value === "string") {
+      try { value = JSON.parse(value); }
+      catch { throw new Error(`${label} must contain valid JSON.`); }
+    }
+    if (!isObject(value)) throw new Error(`${label} must be a JSON object.`);
+    return value;
+  }
+
+  function overlay(defaults, override) {
+    if (!isObject(override)) return clone(defaults);
+    return Object.fromEntries(Object.entries(defaults).map(([key, value]) => {
+      const candidate = override[key] ?? value;
+      if (isObject(value)) return [key, overlay(value, candidate)];
+      if (typeof value === "number") return [key, number(candidate, value)];
+      return [key, typeof value === typeof candidate ? candidate : value];
+    }));
+  }
+
+  function settings(raw = "{}") {
+    const result = overlay(DATA.defaults, object(raw, "Camera tag settings"));
+    result.weight_max = number(result.weight_max, 10, 0.1, 50);
+    result.weight_min = number(result.weight_min, 0.1, 0.1, result.weight_max);
+    result.extra_master = number(result.extra_master, 1, 0, 20);
+    result.xy_mult = number(result.xy_mult, 10, 0.1, 50);
+    result.azimuth.weight = number(result.azimuth.weight, 10, 0.1, 50);
+    result.azimuth.deadzone_ratio = number(result.azimuth.deadzone_ratio, 0.05, 0, 1);
+    for (const axis of ["azimuth", "elevation", "distance", "tilt"]) {
+      result[axis].extra = number(result[axis].extra, 0, -50, 50);
+    }
+    return result;
+  }
+
+  function normalizeCamera(horizontal_angle = 0, vertical_angle = 0, zoom = 4, roll = 0) {
+    return {
+      horizontal_angle: number(horizontal_angle, 0, 0, 360) % 360,
+      vertical_angle: number(vertical_angle, 0, -30, 60),
+      zoom: number(zoom, 4, 0, 10),
+      roll: number(roll, 0, 0, 1),
+    };
+  }
+
+  function distanceKey(zoom) {
+    if (zoom < 2) return "wide";
+    if (zoom < 2.75) return "full";
+    if (zoom < 3.5) return "cowboy_shot";
+    if (zoom < 6) return "medium";
+    if (zoom < 9) return "cu";
+    return "ecu";
+  }
+
+  const formatWeight = (weight) => (Math.floor(weight * 100 + 0.500000001) / 100).toFixed(2);
+  const weightedTags = (value, weight) => value.split(",").map((tag) => tag.trim()).filter(Boolean).map((tag) => `(${tag}:${formatWeight(weight)})`);
+  const phrase = (value, weight) => !value.trim() ? "" : weight === 1 ? value.trim() : `(${value.trim()}:${formatWeight(weight)})`;
+  const escapeTag = (value) => value.replaceAll("(", "\\(").replaceAll(")", "\\)");
+
+  function buildExtraConfig(values = {}) {
+    const label = "extreme_type" in values ? values.extreme_type : "None";
+    if (typeof label !== "string") throw new Error("Extreme viewpoint preset must be a string.");
+    const extreme = DATA.extreme_presets.find((preset) => preset.label === label);
+    if (!extreme) throw new Error(`Unknown extreme viewpoint preset: ${label}`);
+    const result = { schema_version: 1, extras: {} };
+    if (extreme.value) {
+      result.extreme = {
+        tag: extreme.kind === "tag" ? escapeTag(extreme.value) : extreme.value,
+        weight: number(values.extreme_weight ?? 1, 1, 0.1, 50),
+      };
+    }
+    for (const group of DATA.extra_groups) {
+      const key = group.key;
+      const selected = `${key}_preset` in values ? values[`${key}_preset`] : "None";
+      if (typeof selected !== "string") throw new Error(`${group.label} preset must be a string.`);
+      let value = "";
+      if (selected === "Custom") {
+        value = typeof values[`${key}_custom`] === "string" ? values[`${key}_custom`].trim() : "";
+      } else if (selected !== "None") {
+        const preset = group.presets.find((item) => item.label === selected);
+        if (!preset) throw new Error(`Unknown ${group.label} preset: ${selected}`);
+        value = preset.kind === "tag" ? escapeTag(preset.value) : preset.value;
+      }
+      result.extras[key] = {
+        enabled: Boolean(value),
+        value,
+        weight: number(values[`${key}_weight`] ?? 1, 1, 0.1, 10),
+      };
+    }
+    return result;
+  }
+
+  function normalizeExtraConfig(raw = "") {
+    const config = object(raw, "Extra configuration");
+    if ("schema_version" in config && config.schema_version !== 1) {
+      throw new Error("Unsupported extra configuration version; expected 1.");
+    }
+    const extras = object(config.extras, "Extra configuration extras");
+    const result = { extras: {} };
+    for (const group of DATA.extra_groups) {
+      const key = group.key;
+      const entry = extras[key];
+      if (isObject(entry) && entry.enabled === true && typeof entry.value === "string" && entry.value.trim()) {
+        result.extras[key] = {
+          enabled: true,
+          value: entry.value.trim(),
+          weight: number("weight" in entry ? entry.weight : (key === "dof" ? 1.3 : 1), 1, 0.1, 50),
+        };
+      }
+    }
+    const extremes = [config.extreme, config.extreme_high, config.extreme_low]
+      .filter((entry) => isObject(entry) && typeof entry.tag === "string" && entry.tag.trim());
+    if (extremes.length > 1) throw new Error("Choose one extreme viewpoint; the configuration contains conflicting viewpoints.");
+    if (extremes.length) {
+      result.extreme = {
+        tag: extremes[0].tag.trim(),
+        weight: number(extremes[0].weight ?? 1, 1, 0.1, 50),
+      };
+    }
+    return result;
+  }
+
+  function extraPrompt(raw = "") {
+    const config = normalizeExtraConfig(raw);
+    const parts = [];
+    if (config.extreme) parts.push(phrase(config.extreme.tag, config.extreme.weight));
+    for (const group of DATA.extra_groups) {
+      const entry = config.extras[group.key];
+      if (entry) parts.push(phrase(entry.value, entry.weight));
+    }
+    return parts.filter(Boolean).join(", ");
+  }
+
+  function cameraPrompt(horizontal = 0, vertical = 0, zoom = 4, roll = 0, tags = "{}", extra = "") {
+    const camera = normalizeCamera(horizontal, vertical, zoom, roll);
+    const config = settings(tags);
+    const extras = normalizeExtraConfig(extra);
+    const parts = [];
+    const min = config.weight_min;
+    const max = config.weight_max;
+    const master = config.extra_master;
+    const xy = config.xy_mult_enabled ? config.xy_mult : null;
+    const maximum = xy !== null ? Math.max(max, xy) : max;
+
+    const azimuth = config.azimuth;
+    if (azimuth.enabled && !extras.extreme) {
+      const angle = camera.horizontal_angle * Math.PI / 180;
+      const ratios = {
+        front: Math.max(0, Math.cos(angle)),
+        back: Math.max(0, -Math.cos(angle)),
+        left: Math.max(0, -Math.sin(angle)),
+        right: Math.max(0, Math.sin(angle)),
+      };
+      const total = Object.values(ratios).reduce((sum, value) => sum + value, 0);
+      const budget = (xy !== null ? xy : azimuth.weight) + azimuth.extra * master;
+      const cap = maximum + Math.max(0, azimuth.extra * master);
+      for (const [direction, ratio] of Object.entries(ratios)) {
+        const weight = ratio / total * budget;
+        if (ratio > 1e-12 && weight >= azimuth.deadzone_ratio) {
+          parts.push(...weightedTags(azimuth.directions[direction].tag, Math.min(cap, Math.max(min, weight))));
+        }
+      }
+    }
+
+    const elevation = config.elevation;
+    if (elevation.enabled && !extras.extreme) {
+      const angle = camera.vertical_angle;
+      const key = angle < -15 ? "low" : angle < 15 ? "eye" : "high";
+      const weight = Math.max(1, Math.abs(angle) / 90 * (xy !== null ? xy : 10)) + master * elevation.extra;
+      if (weight >= azimuth.deadzone_ratio) {
+        parts.push(...weightedTags(elevation.categories[key].tag, Math.min(maximum + Math.max(0, elevation.extra * master), Math.max(min, weight))));
+      }
+    }
+
+    for (const [axis, tag] of [
+      ["distance", config.distance.categories[distanceKey(camera.zoom)].tag],
+      ["tilt", camera.roll > 0 ? config.tilt.dutch_tag : ""],
+    ]) {
+      if (config[axis].enabled && tag) {
+        const extraWeight = config[axis].extra * master;
+        parts.push(...weightedTags(tag, Math.min(max + Math.max(0, extraWeight), Math.max(0.1, 1 + extraWeight))));
+      }
+    }
+
+    const text = extraPrompt(extras);
+    if (text) parts.push(text);
+    return parts.join(", ");
+  }
+
+  function closestPreset(key, value) {
+    const options = DATA.camera_presets[key];
+    if (key === "zoom") {
+      const keys = ["wide", "full", "cowboy_shot", "medium", "cu", "ecu"];
+      return options[keys.indexOf(distanceKey(value))];
+    }
+    const distance = (candidate) => key === "horizontal_angle"
+      ? Math.min(Math.abs(candidate - value), 360 - Math.abs(candidate - value))
+      : Math.abs(candidate - value);
+    return options.reduce((best, option) => distance(option.value) < distance(best.value) ? option : best);
+  }
+
+  return {
+    isObject, clone, number, settings, normalizeCamera, distanceKey,
+    buildExtraConfig, normalizeExtraConfig, extraPrompt, cameraPrompt,
+    closestPreset, formatWeight, escapeTag,
+  };
+})();
+
+/* =====================================================================
+   UI core — state, persistence, and control construction.
+   ===================================================================== */
+const STORAGE_KEY = "anima-camera-angle:v1";
+const AXES = [
+  { key: "horizontal_angle", label: "Horizontal", min: 0, max: 360, step: 1, decimals: 0 },
+  { key: "vertical_angle", label: "Vertical", min: -30, max: 60, step: 1, decimals: 0 },
+  { key: "zoom", label: "Distance", min: 0, max: 10, step: 0.1, decimals: 1 },
+];
+const ADVANCED_GROUPS = [
+  {
+    path: "azimuth", title: "Horizontal tags", baseWeight: true,
+    tags: [["front", "Front"], ["back", "Back"], ["left", "Left"], ["right", "Right"]],
+    tagPath: (key) => `azimuth.directions.${key}.tag`,
+  },
+  {
+    path: "elevation", title: "Vertical tags",
+    tags: [["high", "From above"], ["eye", "Eye level"], ["low", "From below"]],
+    tagPath: (key) => `elevation.categories.${key}.tag`,
+  },
+  {
+    path: "distance", title: "Framing tags",
+    tags: [["wide", "Wide"], ["full", "Full body"], ["cowboy_shot", "Cowboy"], ["medium", "Upper body"], ["cu", "Close-up"], ["ecu", "Extreme close-up"]],
+    tagPath: (key) => `distance.categories.${key}.tag`,
+  },
+  {
+    path: "tilt", title: "Dutch angle",
+    tags: [["dutch_tag", "Tag"]],
+    tagPath: () => "tilt.dutch_tag",
+  },
+];
+
+const $ = (selector, root = document) => root.querySelector(selector);
+const cleanLabel = (label) => label.replace(/\s*\[(?:Tag|Description)\]$/i, "");
+const fmtAngle = (value) => Number.isInteger(value) ? String(value) : String(Math.round(value * 10) / 10);
+const fmtWeight = (value) => Number(value).toFixed(1);
+const fmtNumber = (value) => Number.isInteger(value) ? String(value) : String(Math.round(value * 100) / 100);
+
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key === "class") node.className = value;
+    else if (key === "text") node.textContent = value;
+    else if (key === "dataset") Object.assign(node.dataset, value);
+    else if (value === true) node.setAttribute(key, "");
+    else if (value !== false && value != null) node.setAttribute(key, value);
+  }
+  for (const child of children.flat()) {
+    if (child === null || child === undefined || child === false) continue;
+    node.append(child.nodeType ? child : document.createTextNode(String(child)));
+  }
+  return node;
+}
+
+function defaultState() {
+  return {
+    camera: Logic.normalizeCamera(),
+    extreme: { type: "None", weight: 1 },
+    groups: Object.fromEntries(DATA.extra_groups.map((group) => [group.key, { preset: "None", custom: "", weight: 1 }])),
+    tags: Logic.clone(DATA.defaults),
+    mode: "camera",
+    advancedOpen: false,
+  };
+}
+
+function mergeDeep(base, patch) {
+  if (!Logic.isObject(patch)) return base;
+  const result = Logic.clone(base);
+  for (const [key, value] of Object.entries(patch)) {
+    result[key] = Logic.isObject(value) && Logic.isObject(result[key]) ? mergeDeep(result[key], value) : value;
+  }
+  return result;
+}
+
+/* Validate saved or externally supplied state against the catalog. */
+function sanitizeState(input, base) {
+  const next = Logic.clone(base);
+  if (!Logic.isObject(input)) return next;
+
+  if (Logic.isObject(input.camera)) {
+    const camera = input.camera;
+    const normalized = Logic.normalizeCamera(
+      camera.horizontal_angle ?? next.camera.horizontal_angle,
+      camera.vertical_angle ?? next.camera.vertical_angle,
+      camera.zoom ?? next.camera.zoom,
+      camera.roll ?? next.camera.roll,
+    );
+    next.camera = { ...normalized, roll: normalized.roll > 0 ? 1 : 0 };
+  }
+
+  if (Logic.isObject(input.extreme)) {
+    const type = input.extreme.type ?? next.extreme.type;
+    next.extreme = {
+      type: DATA.extreme_presets.some((preset) => preset.label === type) ? type : "None",
+      weight: Logic.number(input.extreme.weight, next.extreme.weight, 0.1, 50),
+    };
+  }
+
+  if (Logic.isObject(input.groups)) {
+    for (const group of DATA.extra_groups) {
+      const entry = input.groups[group.key];
+      if (!Logic.isObject(entry)) continue;
+      const previous = next.groups[group.key];
+      const preset = entry.preset ?? previous.preset;
+      next.groups[group.key] = {
+        preset: preset === "None" || preset === "Custom" || group.presets.some((item) => item.label === preset) ? preset : "None",
+        custom: typeof entry.custom === "string" ? entry.custom : previous.custom,
+        weight: Logic.number(entry.weight, previous.weight, 0.1, 10),
+      };
+    }
+  }
+
+  if (Logic.isObject(input.tags)) {
+    try { next.tags = Logic.settings(mergeDeep(base.tags, input.tags)); }
+    catch { /* keep the base tags when the supplied settings are unusable */ }
+  }
+
+  if (input.mode === "camera" || input.mode === "extras") next.mode = input.mode;
+  if (typeof input.advancedOpen === "boolean") next.advancedOpen = input.advancedOpen;
+  return next;
+}
+
+function restoreState() {
+  const base = defaultState();
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? sanitizeState(JSON.parse(raw), base) : base;
+  } catch (error) {
+    console.warn("[Anima Camera] Could not restore saved state:", error);
+    return base;
+  }
+}
+
+function serializeState() {
+  return {
+    camera: state.camera,
+    extreme: state.extreme,
+    groups: state.groups,
+    tags: state.tags,
+    mode: state.mode,
+    advancedOpen: state.advancedOpen,
+  };
+}
+
+let state = restoreState();
+let scene = null;
+let promptState = { camera: "", extras: "", config: { extras: {} }, error: "" };
+let saveTimer = 0;
+let copyTimer = 0;
+let toastTimer = 0;
+
+const refs = {
+  axes: {},
+  groups: {},
+  modeButtons: [],
+};
+
+function cacheRefs() {
+  refs.resetAll = $("#reset-all");
+  refs.resetCamera = $("#reset-camera");
+  refs.clearExtras = $("#clear-extras");
+  refs.extrasCount = $("#extras-count");
+  refs.groupsRoot = $("#groups");
+  refs.extremeType = $("#extreme-type");
+  refs.extremePreview = $("#extreme-preview");
+  refs.extremeWeightRow = $("#extreme-weight-row");
+  refs.extremeRange = $("#extreme-weight-range");
+  refs.extremeWeight = $("#extreme-weight");
+  refs.roll = $("#roll");
+  refs.advanced = $("#advanced");
+  refs.advancedBody = $("#advanced-body");
+  refs.advancedHint = $("#advanced-hint");
+  refs.viewport = $("#viewport");
+  refs.scene = $("#scene");
+  refs.handleTip = $("#handle-tip");
+  refs.hudView = $("#hud-view");
+  refs.hudFrame = $("#hud-frame");
+  refs.readout = $("#camera-readout");
+  refs.promptOutput = $("#prompt-output");
+  refs.promptNote = $("#prompt-note");
+  refs.charCount = $("#char-count");
+  refs.copyBtn = $("#copy-prompt");
+  refs.copyLabel = $("#copy-label");
+  refs.toast = $("#toast");
+  refs.modeButtons = [...document.querySelectorAll(".mode-btn")];
+
+  for (const axis of AXES) {
+    refs.axes[axis.key] = {
+      row: $(`.axis[data-axis="${axis.key}"]`),
+      select: $(`[data-axis-select="${axis.key}"]`),
+      input: $(`[data-axis-input="${axis.key}"]`),
+    };
+  }
+}
+
+function saveNow() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState())); }
+  catch { /* storage can be unavailable on locked-down file:// origins */ }
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 220);
+}
+
+function commit() {
+  render();
+  scheduleSave();
+}
+
+function setCamera(key, value) {
+  const candidate = { ...state.camera, [key]: value };
+  const normalized = Logic.normalizeCamera(candidate.horizontal_angle, candidate.vertical_angle, candidate.zoom, candidate.roll);
+  if (key === "roll") normalized.roll = value > 0 ? 1 : 0;
+  state.camera = normalized;
+  commit();
+}
+
+function setGroupWeight(key, value) {
+  const entry = state.groups[key];
+  entry.weight = Logic.number(value, entry.weight, 0.1, 10);
+  commit();
+}
+
+function setExtremeWeight(value) {
+  state.extreme.weight = Logic.number(value, state.extreme.weight, 0.1, 50);
+  commit();
+}
+
+function fillRange(range) {
+  const min = Number(range.min);
+  const max = Number(range.max);
+  const value = Number(range.value);
+  const percent = max > min ? ((value - min) / (max - min)) * 100 : 0;
+  range.style.setProperty("--fill", `${percent.toFixed(2)}%`);
+}
+
+function syncWeight(range, input, value) {
+  if (range.value !== String(value)) range.value = String(value);
+  fillRange(range);
+  if (document.activeElement !== input) {
+    const text = fmtWeight(value);
+    if (input.value !== text) input.value = text;
+  }
+}
+
+function buildCameraControls() {
+  for (const axis of AXES) {
+    const { select, input } = refs.axes[axis.key];
+    for (const preset of DATA.camera_presets[axis.key]) {
+      select.append(new Option(preset.label, String(preset.value)));
+    }
+    select.addEventListener("change", () => setCamera(axis.key, Number(select.value)));
+    input.addEventListener("input", () => {
+      if (input.value.trim() === "") return;
+      const value = Number(input.value);
+      if (Number.isFinite(value)) setCamera(axis.key, value);
+    });
+    const normalizeField = () => {
+      input.value = axis.key === "zoom" ? fmtWeight(state.camera[axis.key]) : fmtAngle(state.camera[axis.key]);
+    };
+    input.addEventListener("change", normalizeField);
+    input.addEventListener("blur", normalizeField);
+  }
+
+  refs.roll.addEventListener("change", () => setCamera("roll", refs.roll.checked ? 1 : 0));
+
+  for (const preset of DATA.extreme_presets) {
+    const suffix = preset.kind === "tag" ? " · tag" : preset.kind === "description" ? " · description" : "";
+    const text = preset.value ? `${cleanLabel(preset.label)}${suffix}` : "None — use camera angles";
+    refs.extremeType.append(new Option(text, preset.label));
+  }
+  refs.extremeType.addEventListener("change", () => {
+    state.extreme.type = refs.extremeType.value;
+    commit();
+  });
+  refs.extremeRange.addEventListener("input", () => setExtremeWeight(Number(refs.extremeRange.value)));
+  refs.extremeWeight.addEventListener("input", () => {
+    if (refs.extremeWeight.value.trim() === "") return;
+    const value = Number(refs.extremeWeight.value);
+    if (Number.isFinite(value)) setExtremeWeight(value);
+  });
+  refs.extremeWeight.addEventListener("blur", () => { refs.extremeWeight.value = fmtWeight(state.extreme.weight); });
+}
+
+function buildExtras() {
+  const fragment = document.createDocumentFragment();
+
+  for (const group of DATA.extra_groups) {
+    const select = el("select", {
+      id: `preset-${group.key}`,
+      "aria-label": `${group.label} preset`,
+      "aria-describedby": `preview-${group.key}`,
+      title: group.tooltip,
+    });
+    select.append(new Option("None — skip group", "None"), new Option("Custom text…", "Custom"));
+    for (const kind of ["tag", "description"]) {
+      const presets = group.presets.filter((preset) => preset.kind === kind);
+      if (!presets.length) continue;
+      const optgroup = el("optgroup", { label: kind === "tag" ? "Tags" : "Descriptions" });
+      for (const preset of presets) optgroup.append(new Option(cleanLabel(preset.label), preset.label));
+      select.append(optgroup);
+    }
+
+    const preview = el("p", { class: "group-value", id: `preview-${group.key}`, hidden: true });
+    const custom = el("textarea", {
+      id: `custom-${group.key}`, rows: "2", placeholder: "Custom prompt text…",
+      "aria-label": `${group.label} custom text`,
+    });
+    const customRow = el("div", { class: "custom-row", hidden: true }, custom);
+    const range = el("input", {
+      type: "range", id: `weight-${group.key}-range`, min: "0.1", max: "10", step: "0.1",
+      "aria-label": `${group.label} weight slider`,
+    });
+    const number = el("input", {
+      type: "number", id: `weight-${group.key}`, min: "0.1", max: "10", step: "0.1",
+      inputmode: "decimal", "aria-label": `${group.label} weight`,
+    });
+    const weightRow = el("div", { class: "weight", hidden: true }, el("label", { for: `weight-${group.key}` }, "Weight"), range, number);
+    const wrap = el("div", { class: "group", dataset: { group: group.key } },
+      el("div", { class: "group-head" },
+        el("label", { class: "group-label", for: `preset-${group.key}`, title: group.tooltip },
+          el("span", { class: "group-dot", "aria-hidden": "true" }),
+          group.label,
+          el("span", { class: "count" }, String(group.presets.length)),
+        ),
+      ),
+      select, preview, customRow, weightRow,
+    );
+
+    select.addEventListener("change", () => {
+      state.groups[group.key].preset = select.value;
+      commit();
+    });
+    custom.addEventListener("input", () => {
+      state.groups[group.key].custom = custom.value;
+      commit();
+    });
+    custom.addEventListener("blur", () => {
+      if (custom.value !== state.groups[group.key].custom) custom.value = state.groups[group.key].custom;
+    });
+    range.addEventListener("input", () => setGroupWeight(group.key, Number(range.value)));
+    number.addEventListener("input", () => {
+      if (number.value.trim() === "") return;
+      const value = Number(number.value);
+      if (Number.isFinite(value)) setGroupWeight(group.key, value);
+    });
+    number.addEventListener("blur", () => { number.value = fmtWeight(state.groups[group.key].weight); });
+
+    refs.groups[group.key] = { wrap, select, preview, customRow, custom, weightRow, range, number };
+    fragment.append(wrap);
+  }
+
+  refs.groupsRoot.replaceChildren(fragment);
+}
+
+function pathGet(target, path) {
+  return path.split(".").reduce((value, key) => value?.[key], target);
+}
+
+function pathSet(target, path, value) {
+  const keys = path.split(".");
+  let cursor = target;
+  for (let index = 0; index < keys.length - 1; index += 1) cursor = cursor[keys[index]];
+  cursor[keys[keys.length - 1]] = value;
+}
+
+function bindAdvancedInput(input, path, kind) {
+  const current = pathGet(state.tags, path);
+  if (kind === "checkbox") input.checked = Boolean(current);
+  else input.value = kind === "number" ? fmtNumber(Number(current)) : String(current ?? "");
+
+  const apply = () => {
+    let value;
+    if (kind === "checkbox") value = input.checked;
+    else if (kind === "number") {
+      if (input.value.trim() === "") return;
+      value = Number(input.value);
+      if (!Number.isFinite(value)) return;
+      value = Math.max(Number(input.min), Math.min(Number(input.max), value));
+    } else value = input.value;
+    pathSet(state.tags, path, value);
+    commit();
+  };
+
+  input.addEventListener(kind === "checkbox" ? "change" : "input", apply);
+  if (kind === "number") {
+    input.addEventListener("blur", () => { input.value = fmtNumber(Number(pathGet(state.tags, path))); });
+  }
+}
+
+function numberField(label, path, min, max, step) {
+  const input = el("input", { type: "number", min: String(min), max: String(max), step: String(step), inputmode: "decimal" });
+  bindAdvancedInput(input, path, "number");
+  return el("label", { class: "adv-field" }, el("span", {}, label), input);
+}
+
+function checkboxField(label, path) {
+  const input = el("input", { type: "checkbox" });
+  bindAdvancedInput(input, path, "checkbox");
+  return el("label", { class: "adv-check" }, input, el("span", {}, label));
+}
+
+function textField(label, path) {
+  const input = el("input", { type: "text", spellcheck: "false" });
+  bindAdvancedInput(input, path, "text");
+  return el("label", { class: "adv-field" }, el("span", {}, label), input);
+}
+
+function buildAdvanced() {
+  const fragment = document.createDocumentFragment();
+  fragment.append(el("p", { class: "hint" },
+    "Weights change prompt emphasis. The upstream angle multiplier defaults to 10; tune it for your checkpoint. Reset camera keeps these settings.",
+  ));
+
+  const global = el("div", { class: "adv-global" },
+    checkboxField("Use angle multiplier", "xy_mult_enabled"),
+    numberField("Angle multiplier", "xy_mult", 0.1, 50, 0.1),
+    numberField("Extra weight scale", "extra_master", 0, 20, 0.1),
+  );
+  fragment.append(global);
+
+  for (const group of ADVANCED_GROUPS) {
+    const fieldset = el("fieldset", { class: "adv-group" }, el("legend", {}, group.title));
+    const controls = el("div", { class: "adv-global" },
+      checkboxField("Enabled", `${group.path}.enabled`),
+      numberField("Extra weight", `${group.path}.extra`, -50, 50, 0.1),
+    );
+    if (group.baseWeight) controls.append(numberField("Base weight", "azimuth.weight", 0.1, 50, 0.1));
+    fieldset.append(controls);
+
+    const tags = el("div", { class: "adv-tags" });
+    for (const [key, label] of group.tags) tags.append(textField(label, group.tagPath(key)));
+    fieldset.append(tags);
+    fragment.append(fieldset);
+  }
+
+  const reset = el("button", { class: "btn ghost", type: "button" }, "Reset tags and weights");
+  reset.addEventListener("click", resetTags);
+  fragment.append(el("div", { class: "advanced-actions" }, reset));
+
+  refs.advancedBody.replaceChildren(fragment);
+}
+
+/* =====================================================================
+   UI render — one state, one render path, no polling.
+   ===================================================================== */
+function computePrompts() {
+  try {
+    const values = { extreme_type: state.extreme.type, extreme_weight: state.extreme.weight };
+    for (const group of DATA.extra_groups) {
+      const entry = state.groups[group.key];
+      values[`${group.key}_preset`] = entry.preset;
+      values[`${group.key}_custom`] = entry.custom;
+      values[`${group.key}_weight`] = entry.weight;
+    }
+    const config = Logic.buildExtraConfig(values);
+    const extras = Logic.extraPrompt(config);
+    const camera = Logic.cameraPrompt(
+      state.camera.horizontal_angle, state.camera.vertical_angle,
+      state.camera.zoom, state.camera.roll, state.tags, config,
+    );
+    return { config, extras, camera, error: "" };
+  } catch (error) {
+    return { config: { extras: {} }, extras: "", camera: "", error: error.message || "Could not build the prompt." };
+  }
+}
+
+function render() {
+  promptState = computePrompts();
+  renderCamera();
+  renderExtreme();
+  renderGroups();
+  renderPrompt();
+  renderAdvancedHint();
+  updateHud();
+  if (scene) scene.update(state.camera);
+}
+
+function renderCamera() {
+  const extreme = state.extreme.type !== "None";
+  for (const axis of AXES) {
+    const control = refs.axes[axis.key];
+    const value = state.camera[axis.key];
+    const preset = Logic.closestPreset(axis.key, value);
+    const presetValue = String(preset.value);
+    if (control.select.value !== presetValue) control.select.value = presetValue;
+    if (document.activeElement !== control.input) {
+      const text = axis.key === "zoom" ? value.toFixed(1) : fmtAngle(value);
+      if (control.input.value !== text) control.input.value = text;
+    }
+    const axisEnabled = axis.key === "horizontal_angle"
+      ? state.tags.azimuth.enabled
+      : axis.key === "vertical_angle"
+        ? state.tags.elevation.enabled
+        : state.tags.distance.enabled;
+    const muted = !axisEnabled || (extreme && axis.key !== "zoom");
+    control.row.classList.toggle("is-muted", muted);
+    control.row.title = !axisEnabled
+      ? "This axis is disabled in Advanced tags & weights."
+      : (extreme && axis.key !== "zoom" ? "Ignored while an extreme viewpoint is active." : "");
+  }
+  refs.roll.checked = state.camera.roll > 0;
+}
+
+function renderExtreme() {
+  refs.extremeType.value = state.extreme.type;
+  const preset = DATA.extreme_presets.find((item) => item.label === state.extreme.type);
+  const value = preset?.value?.trim() ?? "";
+  refs.extremePreview.hidden = !value;
+  if (value) {
+    refs.extremePreview.textContent = value;
+    refs.extremePreview.title = value;
+  }
+  refs.extremeWeightRow.hidden = state.extreme.type === "None";
+  syncWeight(refs.extremeRange, refs.extremeWeight, state.extreme.weight);
+}
+
+function renderGroups() {
+  for (const group of DATA.extra_groups) {
+    const entry = state.groups[group.key];
+    const control = refs.groups[group.key];
+    control.select.value = entry.preset;
+
+    const selected = entry.preset !== "None";
+    const isActive = Boolean(promptState.config.extras[group.key]?.enabled);
+    control.wrap.classList.toggle("is-active", isActive);
+    control.customRow.hidden = entry.preset !== "Custom";
+    control.weightRow.hidden = !selected;
+
+    if (entry.preset === "None") {
+      control.preview.hidden = true;
+    } else if (entry.preset === "Custom") {
+      const custom = entry.custom.trim();
+      control.preview.hidden = false;
+      control.preview.textContent = custom || "Custom text — add your own below.";
+      control.preview.title = custom;
+      control.preview.classList.toggle("is-empty", !custom);
+    } else {
+      const preset = group.presets.find((item) => item.label === entry.preset);
+      control.preview.hidden = !preset;
+      if (preset) {
+        control.preview.textContent = preset.value;
+        control.preview.title = preset.value;
+        control.preview.classList.remove("is-empty");
+      }
+    }
+
+    if (selected) syncWeight(control.range, control.number, entry.weight);
+    if (document.activeElement !== control.custom && control.custom.value !== entry.custom) {
+      control.custom.value = entry.custom;
+    }
+  }
+  refs.extrasCount.textContent = `${Object.values(promptState.config.extras ?? {}).filter((entry) => entry.enabled).length + (promptState.config.extreme ? 1 : 0)} active`;
+}
+
+let lastPromptText = null;
+
+function renderPrompt() {
+  const text = state.mode === "extras" ? promptState.extras : promptState.camera;
+  const shown = promptState.error ? promptState.error : text;
+  const output = refs.promptOutput;
+  if (output.value !== shown) output.value = shown;
+  output.classList.toggle("is-error", Boolean(promptState.error));
+  refs.copyBtn.disabled = !text || Boolean(promptState.error);
+  refs.charCount.textContent = promptState.error ? "—" : `${text.length.toLocaleString()} character${text.length === 1 ? "" : "s"}`;
+
+  for (const button of refs.modeButtons) {
+    button.setAttribute("aria-pressed", String(button.dataset.mode === state.mode));
+  }
+
+  let note = "";
+  let tone = "accent";
+  if (promptState.error) {
+    note = "Prompt error — check Advanced tag values.";
+    tone = "error";
+  } else if (state.mode === "extras") {
+    note = text
+      ? "Standalone extras text — append it to your own camera prompt."
+      : "No extras selected. Choose a preset above to build standalone extra text.";
+    tone = "muted";
+  } else if (promptState.config.extreme) {
+    note = "Extreme viewpoint replaces the horizontal and vertical tags.";
+  } else if (!text) {
+    note = "No tags are active. Enable an axis in Advanced or add an extra preset.";
+    tone = "muted";
+  }
+  refs.promptNote.hidden = !note;
+  refs.promptNote.textContent = note;
+  refs.promptNote.classList.toggle("is-error", tone === "error");
+  refs.promptNote.classList.toggle("is-muted", tone === "muted");
+
+  if (lastPromptText !== shown) {
+    lastPromptText = shown;
+    sizePrompt();
+  }
+}
+
+function sizePrompt() {
+  const output = refs.promptOutput;
+  output.style.height = "auto";
+  output.style.height = `${Math.max(112, Math.min(280, output.scrollHeight + 2))}px`;
+}
+
+function renderAdvancedHint() {
+  let customized = false;
+  try { customized = JSON.stringify(Logic.settings(state.tags)) !== JSON.stringify(DATA.defaults); }
+  catch { customized = true; }
+  refs.advancedHint.textContent = customized ? "customized" : "defaults";
+  refs.advancedHint.classList.toggle("is-custom", customized);
+}
+
+function updateHud() {
+  const { horizontal_angle: horizontal, vertical_angle: vertical, zoom } = state.camera;
+  const horizontalPreset = Logic.closestPreset("horizontal_angle", horizontal);
+  const distancePreset = Logic.closestPreset("zoom", zoom);
+  refs.hudView.textContent = `${cleanLabel(horizontalPreset.label)} · ${Math.round(horizontal)}° / ${Math.round(vertical)}°`;
+  refs.hudFrame.textContent = `${cleanLabel(distancePreset.label)} · ${zoom.toFixed(1)}`;
+  refs.readout.textContent = `${fmtAngle(horizontal)}° / ${fmtAngle(vertical)}° · ${zoom.toFixed(1)}${state.camera.roll > 0 ? " · Dutch" : ""}`;
+  refs.scene.setAttribute("aria-label",
+    `3D camera guide. Horizontal ${Math.round(horizontal)} degrees, vertical ${Math.round(vertical)} degrees, distance ${zoom.toFixed(1)}. ` +
+    "Drag the colored handles, or use arrow keys to adjust, plus and minus to zoom, and zero to reset.",
+  );
+}
+
+/* =====================================================================
+   Actions
+   ===================================================================== */
+function undoReset(snapshot, message, rebuild = false) {
+  return {
+    label: "Undo",
+    run: () => {
+      state = snapshot;
+      refs.advanced.open = state.advancedOpen;
+      if (rebuild) buildAdvanced();
+      commit();
+      showToast(message);
+    },
+  };
+}
+
+function resetCamera(announce = true) {
+  const snapshot = Logic.clone(state);
+  state.camera = Logic.normalizeCamera();
+  commit();
+  if (announce) showToast("Camera reset.", undoReset(snapshot, "Camera reset undone."));
+}
+
+function clearExtras() {
+  const snapshot = Logic.clone(state);
+  state.extreme = { type: "None", weight: 1 };
+  for (const group of DATA.extra_groups) {
+    state.groups[group.key] = { preset: "None", custom: "", weight: 1 };
+  }
+  commit();
+  showToast("Extra prompts cleared.", undoReset(snapshot, "Extra prompts restored."));
+}
+
+function resetTags() {
+  const snapshot = Logic.clone(state);
+  state.tags = Logic.clone(DATA.defaults);
+  buildAdvanced();
+  commit();
+  showToast("Tags and weights reset.", undoReset(snapshot, "Tags and weights restored.", true));
+}
+
+function resetAll() {
+  const snapshot = Logic.clone(state);
+  state = defaultState();
+  refs.advanced.open = false;
+  buildAdvanced();
+  commit();
+  showToast("Everything reset.", undoReset(snapshot, "Reset undone.", true));
+}
+
+function setState(patch) {
+  const wasAdvancedOpen = state.advancedOpen;
+  state = sanitizeState(patch, state);
+  if (state.advancedOpen !== wasAdvancedOpen) refs.advanced.open = state.advancedOpen;
+  buildAdvanced();
+  commit();
+}
+
+async function copyPrompt() {
+  const text = state.mode === "extras" ? promptState.extras : promptState.camera;
+  if (!text) return;
+  let copied = false;
+
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      copied = true;
+    }
+  } catch { /* fall through to the selection-based copy path */ }
+
+  if (!copied) {
+    const output = refs.promptOutput;
+    output.focus();
+    output.select();
+    try { copied = document.execCommand("copy"); }
+    catch { copied = false; }
+    output.setSelectionRange(0, 0);
+  }
+
+  if (copied) {
+    refs.copyBtn.classList.add("copied");
+    refs.copyLabel.textContent = "Copied";
+    clearTimeout(copyTimer);
+    copyTimer = setTimeout(() => {
+      refs.copyBtn.classList.remove("copied");
+      refs.copyLabel.textContent = "Copy";
+    }, 1600);
+    showToast("Prompt copied to clipboard.");
+  } else {
+    showToast("Press Ctrl+C to copy the selected prompt.");
+  }
+}
+
+function showToast(message, action) {
+  const toast = refs.toast;
+  toast.replaceChildren(document.createTextNode(message));
+  if (action) {
+    const button = el("button", { type: "button" }, action.label);
+    button.addEventListener("click", () => {
+      hideToast();
+      action.run();
+    });
+    toast.append(button);
+  }
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, action ? 5200 : 2600);
+}
+
+function hideToast() {
+  refs.toast.classList.remove("show");
+}
+
+function bindGlobalEvents() {
+  refs.resetCamera.addEventListener("click", () => resetCamera());
+  refs.clearExtras.addEventListener("click", clearExtras);
+  refs.resetAll.addEventListener("click", resetAll);
+  refs.copyBtn.addEventListener("click", copyPrompt);
+
+  for (const button of refs.modeButtons) {
+    button.addEventListener("click", () => {
+      if (state.mode === button.dataset.mode) return;
+      state.mode = button.dataset.mode;
+      commit();
+    });
+  }
+
+  refs.advanced.addEventListener("toggle", () => {
+    state.advancedOpen = refs.advanced.open;
+    scheduleSave();
+  });
+
+  window.addEventListener("resize", sizePrompt, { passive: true });
+  window.addEventListener("pagehide", saveNow);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") saveNow();
+  });
+}
+
+function initApp() {
+  cacheRefs();
+  buildCameraControls();
+  buildExtras();
+  buildAdvanced();
+  bindGlobalEvents();
+
+  try {
+    scene = createScene({
+      canvas: refs.scene,
+      viewport: refs.viewport,
+      tip: refs.handleTip,
+      getCamera: () => state.camera,
+      onChange: setCamera,
+      onReset: () => resetCamera(false),
+    });
+  } catch (error) {
+    console.warn("[Anima Camera] 3D guide unavailable:", error);
+    refs.scene.setAttribute("aria-label", "3D guide unavailable. Use the preset dropdowns or numeric inputs.");
+  }
+
+  refs.advanced.open = state.advancedOpen;
+  render();
+
+  window.AnimaCamera = Object.freeze({
+    version: "1.0.0",
+    data: DATA,
+    getState: () => Logic.clone(state),
+    getPrompt: (mode = state.mode) => mode === "extras" ? promptState.extras : promptState.camera,
+    setState,
+    reset: resetAll,
+  });
+}
+
+/* =====================================================================
+   3D guide — a small, dependency-free perspective renderer.
+   Drag math uses the same world values as the prompt engine.
+   ===================================================================== */
+function createScene({ canvas, viewport, tip, getCamera, onChange, onReset }) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas 2D is unavailable.");
+
+  const COLORS = { pink: [255, 122, 184], cyan: [94, 230, 208], gold: [255, 200, 87] };
+  const color = (name, alpha = 1) => `rgba(${COLORS[name].join(", ")}, ${alpha})`;
+
+  const eye = [4.4, 3.2, 4.8];
+  const look = [0, 0.62, 0];
+  const center = [0, 0.62, 0];
+  const radius = 1.8;
+  const elevationRadius = 1.5;
+  const elevationX = -1.05;
+  const fov = 45 * Math.PI / 180;
+
+  const v3 = {
+    add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
+    sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
+    scale: (a, s) => [a[0] * s, a[1] * s, a[2] * s],
+    dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+    cross: (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]],
+    normalize: (a) => {
+      const length = Math.hypot(a[0], a[1], a[2]) || 1;
+      return [a[0] / length, a[1] / length, a[2] / length];
+    },
+    lerp: (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t],
+  };
+
+  const forward = v3.normalize(v3.sub(look, eye));
+  const right = v3.normalize(v3.cross(forward, [0, 1, 0]));
+  const up = v3.cross(right, forward);
+
+  let camera = getCamera();
+  let width = 1;
+  let height = 1;
+  let dpr = 1;
+  let hovered = null;
+  let dragging = null;
+  let lastPointerY = 0;
+  let handlePoints = [];
+  const controller = new AbortController();
+
+  function project(point) {
+    const delta = v3.sub(point, eye);
+    const x = v3.dot(delta, right);
+    const y = v3.dot(delta, up);
+    const z = v3.dot(delta, forward);
+    if (z <= 0.08) return null;
+    const factor = 1 / Math.tan(fov / 2);
+    const aspect = width / height;
+    return {
+      x: width / 2 + (x * factor / aspect) / z * width / 2,
+      y: height / 2 - (y * factor) / z * height / 2,
+      z,
+    };
+  }
+
+  function screenToRay(x, y) {
+    const nx = (x / width) * 2 - 1;
+    const ny = 1 - (y / height) * 2;
+    const tan = Math.tan(fov / 2);
+    return v3.normalize(v3.add(forward, v3.add(
+      v3.scale(right, nx * tan * (width / height)),
+      v3.scale(up, ny * tan),
+    )));
+  }
+
+  function intersectPlane(direction, planePoint, normal) {
+    const denominator = v3.dot(direction, normal);
+    if (Math.abs(denominator) < 1e-6) return null;
+    const distance = v3.dot(v3.sub(planePoint, eye), normal) / denominator;
+    if (distance <= 0) return null;
+    return v3.add(eye, v3.scale(direction, distance));
+  }
+
+  function positions() {
+    const azimuth = camera.horizontal_angle * Math.PI / 180;
+    const elevation = camera.vertical_angle * Math.PI / 180;
+    const extent = 2.6 - camera.zoom / 10 * 2;
+    const target = [
+      extent * Math.sin(azimuth) * Math.cos(elevation),
+      center[1] + extent * Math.sin(elevation),
+      extent * Math.cos(azimuth) * Math.cos(elevation),
+    ];
+    return {
+      target,
+      horizontal: [radius * Math.sin(azimuth), 0.12, radius * Math.cos(azimuth)],
+      vertical: [elevationX, center[1] + elevationRadius * Math.sin(elevation), elevationRadius * Math.cos(elevation)],
+      distance: v3.lerp(center, target, 0.6),
+    };
+  }
+
+  function traceProjected(points, closed = false) {
+    let started = false;
+    for (const point of points) {
+      const projected = project(point);
+      if (!projected) { started = false; continue; }
+      if (!started) { ctx.moveTo(projected.x, projected.y); started = true; }
+      else ctx.lineTo(projected.x, projected.y);
+    }
+    if (closed && started) ctx.closePath();
+  }
+
+  function drawGrid() {
+    const extent = 2.7;
+    const step = 0.3;
+    ctx.lineWidth = 1;
+    for (let index = -9; index <= 9; index += 1) {
+      const value = index * step;
+      const major = index % 3 === 0;
+      ctx.strokeStyle = major ? "rgba(146, 146, 196, .13)" : "rgba(146, 146, 196, .052)";
+      ctx.beginPath();
+      traceProjected([[value, 0, -extent], [value, 0, extent]]);
+      ctx.stroke();
+      ctx.beginPath();
+      traceProjected([[-extent, 0, value], [extent, 0, value]]);
+      ctx.stroke();
+    }
+  }
+
+  function drawVignette() {
+    const vignette = ctx.createRadialGradient(
+      width / 2, height * 0.42, Math.min(width, height) * 0.18,
+      width / 2, height * 0.5, Math.max(width, height) * 0.78,
+    );
+    vignette.addColorStop(0, "rgba(8, 8, 13, 0)");
+    vignette.addColorStop(0.7, "rgba(8, 8, 13, .2)");
+    vignette.addColorStop(1, "rgba(8, 8, 13, .84)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  function drawGroundShadow() {
+    const ground = project([0, 0.01, 0]);
+    const edge = project([0.78, 0.01, 0]);
+    if (!ground || !edge) return;
+    const reach = Math.hypot(edge.x - ground.x, edge.y - ground.y);
+    const shadow = ctx.createRadialGradient(ground.x, ground.y, 0, ground.x, ground.y, reach);
+    shadow.addColorStop(0, "rgba(0, 0, 0, .52)");
+    shadow.addColorStop(0.58, "rgba(0, 0, 0, .24)");
+    shadow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(ground.x, ground.y, reach, reach * 0.36, 0, 0, Math.PI * 2);
+    ctx.fillStyle = shadow;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRing() {
+    const points = [];
+    for (let index = 0; index <= 96; index += 1) {
+      const angle = index / 96 * Math.PI * 2;
+      points.push([radius * Math.sin(angle), 0.02, radius * Math.cos(angle)]);
+    }
+    ctx.save();
+    ctx.beginPath();
+    traceProjected(points, true);
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = color("pink", 0.11);
+    ctx.shadowColor = color("pink", 0.65);
+    ctx.shadowBlur = 16;
+    ctx.stroke();
+    ctx.beginPath();
+    traceProjected(points, true);
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = color("pink", 0.88);
+    ctx.shadowBlur = 7;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawElevationArc() {
+    const points = [];
+    for (let index = 0; index <= 48; index += 1) {
+      const angle = (-30 + 90 * index / 48) * Math.PI / 180;
+      points.push([elevationX, center[1] + elevationRadius * Math.sin(angle), elevationRadius * Math.cos(angle)]);
+    }
+    ctx.save();
+    ctx.beginPath();
+    traceProjected(points);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = color("cyan", 0.09);
+    ctx.shadowColor = color("cyan", 0.55);
+    ctx.shadowBlur = 14;
+    ctx.stroke();
+    ctx.beginPath();
+    traceProjected(points);
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = color("cyan", 0.78);
+    ctx.shadowBlur = 6;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawGoldLine(target) {
+    const start = project(center);
+    const end = project(target);
+    if (!start || !end) return;
+    ctx.save();
+    ctx.strokeStyle = color("gold", 0.58);
+    ctx.lineWidth = 1.4;
+    ctx.shadowColor = color("gold", 0.55);
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(end.x, end.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawSubject() {
+    const halfWidth = 0.55;
+    const halfHeight = 0.65;
+    const halfDepth = 0.05;
+    const y = center[1];
+    const vertices = [
+      [-halfWidth, y - halfHeight, -halfDepth], [halfWidth, y - halfHeight, -halfDepth],
+      [halfWidth, y + halfHeight, -halfDepth], [-halfWidth, y + halfHeight, -halfDepth],
+      [-halfWidth, y - halfHeight, halfDepth], [halfWidth, y - halfHeight, halfDepth],
+      [halfWidth, y + halfHeight, halfDepth], [-halfWidth, y + halfHeight, halfDepth],
+    ];
+    const faces = [
+      { indices: [4, 5, 6, 7], fill: "#6d6695", normal: [0, 0, 1] },
+      { indices: [1, 0, 3, 2], fill: "#4b4667", normal: [0, 0, -1] },
+      { indices: [0, 1, 5, 4], fill: "#3d3857", normal: [0, -1, 0] },
+      { indices: [3, 2, 6, 7], fill: "#5b557f", normal: [0, 1, 0] },
+      { indices: [0, 4, 7, 3], fill: "#514b72", normal: [-1, 0, 0] },
+      { indices: [1, 2, 6, 5], fill: "#605a86", normal: [1, 0, 0] },
+    ];
+
+    const visible = [];
+    for (const face of faces) {
+      const points = face.indices.map((index) => vertices[index]);
+      const faceCenter = points.reduce((sum, point) => v3.add(sum, point), [0, 0, 0]).map((value) => value / 4);
+      if (v3.dot(face.normal, v3.sub(eye, faceCenter)) <= 0) continue;
+      const projected = points.map(project);
+      if (projected.some((point) => !point)) continue;
+      visible.push({
+        ...face,
+        projected,
+        depth: projected.reduce((sum, point) => sum + point.z, 0) / 4,
+      });
+    }
+    visible.sort((a, b) => b.depth - a.depth);
+
+    for (const face of visible) {
+      ctx.beginPath();
+      ctx.moveTo(face.projected[0].x, face.projected[0].y);
+      for (let index = 1; index < face.projected.length; index += 1) {
+        ctx.lineTo(face.projected[index].x, face.projected[index].y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = face.fill;
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 255, 255, .08)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    const front = visible.find((face) => face.normal[2] === 1);
+    if (!front) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(front.projected[0].x, front.projected[0].y);
+    for (let index = 1; index < front.projected.length; index += 1) {
+      ctx.lineTo(front.projected[index].x, front.projected[index].y);
+    }
+    ctx.closePath();
+    ctx.clip();
+
+    const plane = halfDepth + 0.002;
+    const headY = y + 0.32;
+    const head = project([0, headY, plane]);
+    const headEdge = project([0.17, headY, plane]);
+    if (head && headEdge) {
+      ctx.beginPath();
+      ctx.arc(head.x, head.y, Math.hypot(headEdge.x - head.x, headEdge.y - head.y), 0, Math.PI * 2);
+      ctx.fillStyle = "#f0e2f1";
+      ctx.fill();
+    }
+
+    const bodyY = y - 0.16;
+    const body = project([0, bodyY, plane]);
+    const bodyX = project([0.3, bodyY, plane]);
+    const bodyTop = project([0, bodyY + 0.42, plane]);
+    if (body && bodyX && bodyTop) {
+      ctx.beginPath();
+      ctx.ellipse(
+        body.x, body.y,
+        Math.hypot(bodyX.x - body.x, bodyX.y - body.y),
+        Math.hypot(bodyTop.x - body.x, bodyTop.y - body.y),
+        0, 0, Math.PI * 2,
+      );
+      ctx.fillStyle = "#b6a2e8";
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawCameraMarker(target) {
+    const position = project(target);
+    const anchor = project(center);
+    if (!position || !anchor) return;
+    const angle = Math.atan2(anchor.y - position.y, anchor.x - position.x);
+    const scale = Math.max(1, Math.min(1.35, 17 / position.z));
+
+    ctx.save();
+    ctx.translate(position.x, position.y);
+
+    const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, 30 * scale);
+    glow.addColorStop(0, color("pink", 0.32));
+    glow.addColorStop(1, color("pink", 0));
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, 0, 30 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.rotate(angle);
+    ctx.scale(scale, scale);
+
+    ctx.beginPath();
+    ctx.arc(0, 0, 12.5, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(10, 10, 17, .82)";
+    ctx.fill();
+    ctx.strokeStyle = color("pink", 0.85);
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+
+    const bodyWidth = 14;
+    const bodyHeight = 9.5;
+    const body = () => {
+      ctx.beginPath();
+      if (typeof ctx.roundRect === "function") ctx.roundRect(-bodyWidth / 2, -bodyHeight / 2, bodyWidth, bodyHeight, 2.2);
+      else ctx.rect(-bodyWidth / 2, -bodyHeight / 2, bodyWidth, bodyHeight);
+    };
+
+    body();
+    ctx.fillStyle = "#1d1d2c";
+    ctx.fill();
+    ctx.strokeStyle = color("pink", 0.98);
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+
+    ctx.beginPath();
+    if (typeof ctx.roundRect === "function") ctx.roundRect(-2.5, -bodyHeight / 2 - 2.4, 6, 2.8, 0.9);
+    else ctx.rect(-2.5, -bodyHeight / 2 - 2.4, 6, 2.8);
+    ctx.fillStyle = "#1d1d2c";
+    ctx.fill();
+    ctx.strokeStyle = color("pink", 0.75);
+    ctx.lineWidth = 0.9;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(bodyWidth / 2 - 2.8, 0, 2.9, 0, Math.PI * 2);
+    ctx.fillStyle = color("cyan", 0.96);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 255, 255, .8)";
+    ctx.lineWidth = 0.9;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(bodyWidth / 2 - 2.8, 0, 1.2, 0, Math.PI * 2);
+    ctx.fillStyle = "#0a0a10";
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(-bodyWidth / 2 + 2.8, -1.4, 1.2, 0, Math.PI * 2);
+    ctx.fillStyle = color("gold", 0.98);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHandle(point, palette, active) {
+    const radiusCore = active ? 8.5 : 7;
+    const glowRadius = radiusCore * 3.4;
+    const glow = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, glowRadius);
+    glow.addColorStop(0, color(palette, 0.5));
+    glow.addColorStop(0.55, color(palette, 0.15));
+    glow.addColorStop(1, color(palette, 0));
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, glowRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    const core = ctx.createRadialGradient(
+      point.x - radiusCore * 0.35, point.y - radiusCore * 0.4, radiusCore * 0.1,
+      point.x, point.y, radiusCore,
+    );
+    core.addColorStop(0, "#ffffff");
+    core.addColorStop(0.42, color(palette, 0.98));
+    core.addColorStop(1, color(palette, 0.9));
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radiusCore, 0, Math.PI * 2);
+    ctx.fillStyle = core;
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 255, 255, .7)";
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    if (active) {
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, radiusCore + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = color(palette, 0.55);
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  function drawHandles(positionsState) {
+    const handles = [
+      {
+        id: "horizontal_angle", label: "Horizontal", palette: "pink",
+        point: positionsState.horizontal, value: `${Math.round(camera.horizontal_angle)}°`,
+      },
+      {
+        id: "vertical_angle", label: "Vertical", palette: "cyan",
+        point: positionsState.vertical, value: `${Math.round(camera.vertical_angle)}°`,
+      },
+      {
+        id: "zoom", label: "Distance", palette: "gold",
+        point: positionsState.distance, value: camera.zoom.toFixed(1),
+      },
+    ];
+    handlePoints = [];
+    for (const handle of handles) {
+      const projected = project(handle.point);
+      if (!projected) continue;
+      const entry = { ...handle, p: projected };
+      handlePoints.push(entry);
+      drawHandle(projected, handle.palette, hovered === handle.id || dragging === handle.id);
+    }
+  }
+
+  function showTip(handle) {
+    tip.hidden = false;
+    tip.textContent = `${handle.label} · ${handle.value}`;
+    tip.style.left = `${handle.p.x + canvas.offsetLeft}px`;
+    tip.style.top = `${Math.max(28, handle.p.y + canvas.offsetTop)}px`;
+  }
+
+  function draw() {
+    if (!width || !height) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    const background = ctx.createRadialGradient(
+      width * 0.5, height * 0.38, 0,
+      width * 0.5, height * 0.5, Math.max(width, height) * 0.76,
+    );
+    background.addColorStop(0, "#171728");
+    background.addColorStop(0.55, "#0d0d17");
+    background.addColorStop(1, "#08080d");
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, width, height);
+
+    drawGrid();
+    drawVignette();
+    drawGroundShadow();
+
+    const positionsState = positions();
+    drawRing();
+    drawElevationArc();
+    drawGoldLine(positionsState.target);
+    drawSubject();
+    drawCameraMarker(positionsState.target);
+    drawHandles(positionsState);
+
+    if (hovered && !dragging) {
+      const handle = handlePoints.find((item) => item.id === hovered);
+      if (handle) showTip(handle);
+      else { hovered = null; tip.hidden = true; }
+    } else if (!dragging) {
+      tip.hidden = true;
+    }
+  }
+
+  function localPoint(event) {
+    const bounds = canvas.getBoundingClientRect();
+    return { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
+  }
+
+  function hitTest(x, y) {
+    let best = null;
+    let bestDistance = 18 * 18;
+    for (const handle of handlePoints) {
+      const dx = handle.p.x - x;
+      const dy = handle.p.y - y;
+      const distance = dx * dx + dy * dy;
+      if (distance < bestDistance) { bestDistance = distance; best = handle; }
+    }
+    return best;
+  }
+
+  function releasePointer(event) {
+    if (!dragging) return;
+    dragging = null;
+    canvas.classList.remove("dragging");
+    if (event && canvas.hasPointerCapture?.(event.pointerId)) {
+      canvas.releasePointerCapture(event.pointerId);
+    }
+    const point = event ? localPoint(event) : null;
+    hovered = point ? hitTest(point.x, point.y)?.id ?? null : null;
+    canvas.style.cursor = hovered ? "grab" : "default";
+    draw();
+  }
+
+  canvas.addEventListener("pointerdown", (event) => {
+    const point = localPoint(event);
+    const handle = hitTest(point.x, point.y);
+    if (!handle) return;
+    dragging = handle.id;
+    hovered = handle.id;
+    lastPointerY = event.clientY;
+    canvas.focus({ preventScroll: true });
+    try { canvas.setPointerCapture(event.pointerId); }
+    catch { /* pointer capture is an enhancement */ }
+    canvas.classList.add("dragging");
+    canvas.style.cursor = "grabbing";
+    tip.hidden = true;
+    event.preventDefault();
+  }, { signal: controller.signal });
+
+  canvas.addEventListener("pointermove", (event) => {
+    const point = localPoint(event);
+    if (dragging) {
+      if (dragging === "zoom") {
+        const next = camera.zoom - (event.clientY - lastPointerY) * 0.05;
+        lastPointerY = event.clientY;
+        onChange("zoom", Math.max(0, Math.min(10, next)));
+      } else {
+        const direction = screenToRay(point.x, point.y);
+        if (dragging === "horizontal_angle") {
+          const hit = intersectPlane(direction, [0, 0, 0], [0, 1, 0]);
+          if (hit) {
+            const angle = (Math.atan2(hit[0], hit[2]) * 180 / Math.PI + 360) % 360;
+            onChange("horizontal_angle", angle);
+          }
+        } else {
+          const hit = intersectPlane(direction, [elevationX, 0, 0], [1, 0, 0]);
+          if (hit) {
+            const angle = Math.atan2(hit[1] - center[1], hit[2]) * 180 / Math.PI;
+            onChange("vertical_angle", Math.max(-30, Math.min(60, angle)));
+          }
+        }
+      }
+      event.preventDefault();
+      return;
+    }
+
+    const handle = hitTest(point.x, point.y);
+    const nextHovered = handle ? handle.id : null;
+    canvas.style.cursor = handle ? "grab" : "default";
+    if (nextHovered !== hovered) {
+      hovered = nextHovered;
+      draw();
+    } else if (handle) {
+      showTip(handle);
+    } else {
+      tip.hidden = true;
+    }
+  }, { signal: controller.signal });
+
+  for (const eventName of ["pointerup", "pointercancel", "lostpointercapture"]) {
+    canvas.addEventListener(eventName, releasePointer, { signal: controller.signal });
+  }
+
+  canvas.addEventListener("pointerleave", () => {
+    if (dragging) return;
+    hovered = null;
+    tip.hidden = true;
+    canvas.style.cursor = "default";
+    draw();
+  }, { signal: controller.signal });
+
+  canvas.addEventListener("wheel", (event) => {
+    if (!event.deltaY) return;
+    event.preventDefault();
+    const next = camera.zoom + (event.deltaY < 0 ? 0.25 : -0.25);
+    onChange("zoom", Math.max(0, Math.min(10, next)));
+  }, { passive: false, signal: controller.signal });
+
+  canvas.addEventListener("dblclick", () => onReset(), { signal: controller.signal });
+
+  canvas.addEventListener("keydown", (event) => {
+    const step = event.shiftKey ? 1 : 5;
+    switch (event.key) {
+      case "ArrowLeft":
+        onChange("horizontal_angle", (camera.horizontal_angle - step + 360) % 360);
+        break;
+      case "ArrowRight":
+        onChange("horizontal_angle", (camera.horizontal_angle + step) % 360);
+        break;
+      case "ArrowUp":
+        onChange("vertical_angle", camera.vertical_angle + step);
+        break;
+      case "ArrowDown":
+        onChange("vertical_angle", camera.vertical_angle - step);
+        break;
+      case "+": case "=":
+        onChange("zoom", camera.zoom + 0.5);
+        break;
+      case "-": case "_":
+        onChange("zoom", camera.zoom - 0.5);
+        break;
+      case "0": case "Home": case "r": case "R":
+        onReset();
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+  }, { signal: controller.signal });
+
+  function resize() {
+    const bounds = canvas.getBoundingClientRect();
+    width = Math.max(1, bounds.width);
+    height = Math.max(1, bounds.height);
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    draw();
+  }
+
+  const observer = new ResizeObserver(resize);
+  observer.observe(viewport);
+  resize();
+
+  return {
+    update(nextCamera) {
+      camera = nextCamera;
+      draw();
+    },
+    dispose() {
+      observer.disconnect();
+      controller.abort();
+    },
+  };
+}
+
+/* =====================================================================
+   Boot
+   ===================================================================== */
+try {
+  initApp();
+} catch (error) {
+  console.error("[Anima Camera] Failed to start:", error);
+  const panel = document.getElementById("prompt-panel");
+  if (panel) {
+    const message = document.createElement("p");
+    message.className = "prompt-note is-error";
+    message.textContent = `Could not start the app: ${error.message}`;
+    panel.append(message);
+  }
+}
+
+</script>
+</body>
+</html>
