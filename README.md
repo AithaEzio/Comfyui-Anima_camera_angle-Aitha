@@ -2,6 +2,10 @@
 
 English camera prompt controls for Anima, with an interactive 3D guide, Qwen-style preset dropdowns, and a larger illustration preset library. Forked from [xunying7860/Comfyui-Anima_camera_angle](https://github.com/xunying7860/Comfyui-Anima_camera_angle), with camera control inspiration from [ComfyUI-qwenmultiangle](https://github.com/jtydhr88/ComfyUI-qwenmultiangle).
 
+Want to get just the prompt without using ComfyUI? Visit below.
+
+## 🌐 Open Prompter here: https://aithaezio.github.io/Comfyui-Anima_camera_angle-Aitha/
+
 ## Preview
 
 ![Anima Camera Extra Prompts and Camera Angle nodes in ComfyUI](docs/images/comfyui-camera-nodes.png)
